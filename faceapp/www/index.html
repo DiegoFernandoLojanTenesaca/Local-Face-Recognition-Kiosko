@@ -67,30 +67,32 @@ video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset
  </div>
  <div id=asec-per class=asec>
   <div class=kpis><div class=kpi><div class=n id=kp>0</div><div class=l>Personas</div></div><div class=kpi><div class=n id=km>0</div><div class=l>Marcas hoy</div></div><div class=kpi><div class=n id=kh>0</div><div class=l>Presentes</div></div></div>
-  <div class=card><h2>Enrolar persona</h2>
+  <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx=9 cy=7 r=4/><line x1=19 x2=19 y1=8 y2=14/><line x1=22 x2=16 y1=11 y2=11/></svg>Enrolar persona</h2>
    <input id=nm placeholder="Nombre" style=margin-bottom:10px>
    <div class=stage><video id=av autoplay playsinline muted></video></div>
    <button style=width:100%;margin-top:10px onclick=enroll()>Capturar y enrolar</button>
    <p style=margin-top:8px><span id=em></span></p></div>
-  <div class=card><h2>Personas (<span id=pc>0</span>)</h2><div id=pl></div></div>
+  <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx=9 cy=7 r=4/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Personas (<span id=pc>0</span>)</h2><div id=pl></div></div>
  </div>
  <div id=asec-reg class=asec style=display:none>
-  <div class=card><div class=row style=justify-content:space-between><h2 style=margin:0>Reporte</h2>
+  <div class=card><div class=row style=justify-content:space-between><h2 style=margin:0><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>Reporte</h2>
    <select id=rgsel onchange=renderReport() style=width:auto;padding:8px 10px><option value=0>Hoy</option><option value=7>Últimos 7 días</option><option value=30>Últimos 30 días</option></select></div>
    <table id=rp></table></div>
-  <div class=card><h2>Marcas recientes</h2><table id=lg></table></div>
+  <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><circle cx=12 cy=12 r=10/><path d="M12 6v6l4 2"/></svg>Marcas recientes</h2><table id=lg></table></div>
  </div>
  <div id=asec-aj class=asec style=display:none>
-  <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><line x1=4 x2=4 y1=21 y2=14/><line x1=4 x2=4 y1=10 y2=3/><line x1=12 x2=12 y1=21 y2=12/><line x1=12 x2=12 y1=8 y2=3/><line x1=20 x2=20 y1=21 y2=16/><line x1=20 x2=20 y1=12 y2=3/><line x1=1 x2=7 y1=14 y2=14/><line x1=9 x2=15 y1=8 y2=8/><line x1=17 x2=23 y1=16 y2=16/></svg>Ajustes generales</h2>
-   <div class=fld><label>Nombre del negocio</label><input id=bz placeholder="Opcional"></div>
+  <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx=12 cy=10 r=2.5/><path d="M8.5 16a3.5 3.5 0 0 1 7 0"/></svg>Reconocimiento</h2>
    <div class=fld><div class=flabel><span>Umbral de reconocimiento</span><b id=tv>0.35</b></div><input id=th type=range min=0.25 max=0.6 step=0.01><div class=hint>Más alto, más estricto para reconocer</div></div>
-   <div class=fld><div class=flabel><span>No re marcar antes de</span><b><span id=dv>5</span> min</b></div><input id=dw type=range min=0 max=30 step=1></div>
-   <div class=fld><label class=chk><input id=vz type=checkbox><span>Voz al marcar</span></label></div>
    <div class=fld><label class=chk><input id=lv type=checkbox><span>Anti foto (verificar rostro real)</span></label></div>
-   <div class=fld><div class=flabel><span>Exigencia anti foto</span><b id=ltv>0.5</b></div><input id=lt type=range min=0.3 max=0.8 step=0.05></div>
+   <div class=fld><div class=flabel><span>Exigencia anti foto</span><b id=ltv>0.5</b></div><input id=lt type=range min=0.3 max=0.8 step=0.05></div></div>
+  <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><line x1=4 x2=4 y1=21 y2=14/><line x1=4 x2=4 y1=10 y2=3/><line x1=12 x2=12 y1=21 y2=12/><line x1=12 x2=12 y1=8 y2=3/><line x1=20 x2=20 y1=21 y2=16/><line x1=20 x2=20 y1=12 y2=3/><line x1=1 x2=7 y1=14 y2=14/><line x1=9 x2=15 y1=8 y2=8/><line x1=17 x2=23 y1=16 y2=16/></svg>General</h2>
+   <div class=fld><label>Nombre del negocio</label><input id=bz placeholder="Opcional"></div>
+   <div class=fld><label class=chk><input id=vz type=checkbox><span>Voz al marcar</span></label></div>
+   <div class=fld><div class=flabel><span>No re marcar antes de</span><b><span id=dv>5</span> min</b></div><input id=dw type=range min=0 max=30 step=1><div class=hint>Evita marcas repetidas seguidas</div></div></div>
+  <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><circle cx=12 cy=12 r=10/><path d="M12 6v6l4 2"/></svg>Horario y tardanzas</h2>
    <div class=fld><label>Hora de entrada</label><input id=he type=time><div class=hint>Marca tarde después de esta hora. Vacío para no usar.</div></div>
-   <div class=fld><label>Tolerancia de tardanza (minutos)</label><input id=tl type=number min=0 max=120 placeholder=10></div>
-   <button onclick=savecfg()>Guardar cambios</button> <span id=cm></span></div>
+   <div class=fld><label>Tolerancia (minutos)</label><input id=tl type=number min=0 max=120 placeholder=10></div></div>
+  <button onclick=savecfg() style=width:100%>Guardar cambios</button> <span id=cm></span>
  </div>
  <div id=asec-av class=asec style=display:none>
   <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Notificaciones Telegram</h2>
