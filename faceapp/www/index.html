@@ -163,7 +163,7 @@ function adminTab(s){['per','reg','aj','av'].forEach(x=>{document.getElementById
  await new Promise(r=>kv.onloadedmetadata=r);
  ov.width=kv.videoWidth; ov.height=kv.videoHeight;
  let biz=DB.cfg().business; if(biz){$('biz').textContent=biz;}
- show('k'); $('boot').style.display='none'; loop(); console.log('DIAG APP_READY');
+ show('k'); $('boot').style.display='none'; loop(); tgFlush(); console.log('DIAG APP_READY');   // reenvía notificaciones pendientes
 }catch(e){$('bootmsg').textContent='Error: '+e; console.error('DIAG BOOT_ERR '+(e&&e.stack||e));}})();
 
 const oc=ov.getContext('2d'), COL=['#22d3ee','#22d3ee','#fbbf24','#f472b6','#f472b6'];
@@ -196,12 +196,21 @@ async function testTg(){let c=DB.cfg(),m=$('tgm');m.style.color='#94a3b8';m.text
  try{const r=await fetch('https://api.telegram.org/bot'+c.tg_token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c.tg_chat,text:'Prueba desde la app ✔'})});
   const t=await r.text();m.style.color=(r.status==200?'#4ade80':'#f87171');m.textContent='status '+r.status+' · '+t.slice(0,90);}
  catch(e){m.style.color='#f87171';m.textContent='ERROR: '+(e&&e.message||e);}}
+function tgQ(){return JSON.parse(localStorage.getItem('tgq')||'[]')}
+function tgSetQ(q){localStorage.setItem('tgq',JSON.stringify(q.slice(-50)))}       // cola de reintentos (máx 50)
+async function tgSend(msg){let c=DB.cfg();                                          // envía o lanza si no es 200
+ const r=await fetch('https://api.telegram.org/bot'+c.tg_token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c.tg_chat,text:msg})});
+ if(r.status!=200)throw new Error('status '+r.status);}
+async function tgFlush(){let c=DB.cfg();if(!c.tg_token||!c.tg_chat)return 0;         // reintenta los pendientes
+ let q=tgQ(),rest=[];for(const m of q){try{await tgSend(m);}catch(e){rest.push(m);}}
+ tgSetQ(rest);return rest.length;}
 async function tg(msg){let c=DB.cfg(),el=$('tgstat');
  if(!c.tg_token||!c.tg_chat){if(el){el.textContent='Telegram sin configurar';el.style.color='#64748b';}return;}
  if(el){el.textContent='enviando a Telegram…';el.style.color='#64748b';}
- try{const r=await fetch('https://api.telegram.org/bot'+c.tg_token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c.tg_chat,text:msg})});
-  if(el){el.textContent=r.status==200?'notificado por Telegram':'Telegram: error '+r.status;el.style.color=r.status==200?'#4ade80':'#f87171';}
- }catch(e){if(el){el.textContent='Telegram: sin conexión';el.style.color='#f87171';}}}
+ try{await tgSend(msg);const pend=await tgFlush();                                  // envía y reintenta la cola
+  if(el){el.textContent='notificado por Telegram'+(pend?' ('+pend+' en cola)':'');el.style.color='#4ade80';}
+ }catch(e){const q=tgQ();q.push(msg);tgSetQ(q);                                      // falló → guarda para reenviar
+  if(el){el.textContent='sin conexión — se reenviará ('+q.length+' en cola)';el.style.color='#fbbf24';}}}
 function saveEvidence(ts,blob){let im=new Image();im.onload=()=>{let sc=160/Math.max(im.width,im.height),cn=document.createElement('canvas');
  cn.width=im.width*sc;cn.height=im.height*sc;cn.getContext('2d').drawImage(im,0,0,cn.width,cn.height);
  let e=JSON.parse(localStorage.getItem('evi')||'{}');e[ts]=cn.toDataURL('image/jpeg',0.6);
