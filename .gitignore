@@ -1,0 +1,30 @@
+# --- Node / Capacitor ---
+faceapp/node_modules/
+faceapp/www/ort/
+faceapp/android/build/
+faceapp/android/app/build/
+faceapp/android/.gradle/
+faceapp/android/local.properties
+faceapp/android/app/src/main/assets/public/
+faceapp/android/capacitor-cordova-android-plugins/build/
+
+# --- Modelos ONNX (se descargan con scripts/download-models.sh) ---
+faceapp/www/models/*.onnx
+server/face_models_s/
+server/spoof_models/
+
+# --- APKs y binarios ---
+*.apk
+*.aab
+*.keystore
+
+# --- Python ---
+__pycache__/
+*.pyc
+
+# --- Datos de runtime / local ---
+.claude/
+*.csv
+face_db.npz
+*.log
+.DS_Store

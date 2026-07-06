@@ -1,0 +1,200 @@
+<!doctype html><html lang=es><meta charset=utf-8>
+<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name=theme-color content=#0a0e17><title>Asistencia Facial</title>
+<style>
+:root{--bg:#0a0e17;--line:#1e2740;--txt:#e7ecf5;--mut:#8a99b5;--acc:#6366f1;--ok:#34d399;--no:#fb7185}
+*{box-sizing:border-box;font-family:-apple-system,'Segoe UI',system-ui,Arial,sans-serif;margin:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(900px 500px at 85% -10%,#4f46e522,transparent 60%),radial-gradient(700px 420px at -10% 5%,#0ea5e916,transparent 55%)}
+.top{position:sticky;top:0;z-index:9;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 15px;background:#0a0e17d9;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;letter-spacing:-.3px}.brand .ic{color:var(--acc);width:21px;height:21px}
+.tabs{display:flex;gap:3px}.tab{color:var(--mut);font-size:13px;font-weight:600;padding:8px 13px;border-radius:10px;cursor:pointer}.tab.on{color:#fff;background:#6366f126}
+.wrap{max-width:760px;margin:0 auto;padding:16px 15px 44px}
+h2{font-size:11px;font-weight:700;letter-spacing:.7px;margin:0 0 12px;color:var(--mut);text-transform:uppercase;display:flex;align-items:center;gap:7px}h2 .ic{color:var(--acc)}
+.card{background:linear-gradient(180deg,#111725,#0d1320);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+.ic{width:18px;height:18px;stroke-width:2;flex:none;vertical-align:-3px}.ic.lg{width:23px;height:23px}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#6366f1,#4f46e5);color:#fff;border:0;border-radius:12px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px -10px #4f46e5;transition:transform .1s}
+button:active{transform:translateY(1px)}
+button.sec{background:#182034;border:1px solid var(--line);box-shadow:none;color:#cdd7ea}
+input{width:100%;padding:12px 13px;border-radius:11px;border:1px solid var(--line);background:#0b101c;color:#fff;font-size:15px;outline:none}
+input[type=range]{padding:0;height:5px;accent-color:var(--acc)}input[type=checkbox]{width:auto;transform:scale(1.3)}
+label small{display:block;margin-bottom:4px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;font-size:13px;border-bottom:1px solid #ffffff0d}th{color:var(--mut);font-size:10px;text-transform:uppercase}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}small{color:var(--mut)}
+.stage{position:relative;width:100%;line-height:0;border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset:0;width:100%;height:100%}
+.kiosk{padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:11px}
+#res{font-size:20px;font-weight:800;text-align:center;min-height:28px;display:flex;align-items:center;justify-content:center;gap:9px}
+.ok{color:var(--ok)}.no{color:var(--no)}
+.per{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid #ffffff0a}.per:last-child{border:0}.per .av{width:40px;height:40px;border-radius:11px;background:#182034;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--acc);flex:none}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi{background:linear-gradient(180deg,#111725,#0d1320);border:1px solid var(--line);border-radius:14px;padding:13px}.kpi .n{font-size:22px;font-weight:800}.kpi .l{color:var(--mut);font-size:10px;text-transform:uppercase;margin-top:3px}
+#boot{position:fixed;inset:0;background:#0a0e17;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:20;text-align:center;padding:24px}
+.spin{width:34px;height:34px;border:3px solid #ffffff22;border-top-color:var(--acc);border-radius:50%;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+<div id=boot><div class=spin></div><div id=bootmsg>Cargando motor de IA…</div><small>Corre 100% en tu dispositivo</small></div>
+
+<div class=top><div class=brand><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx=12 cy=10 r="2.5"/><path d="M8.5 16a3.5 3.5 0 0 1 7 0"/></svg><span id=biz>Asistencia</span></div>
+<div class=tabs><div class=tab id=tk onclick=show('k')>Kiosko</div><div class=tab id=ta onclick=show('a')>Admin</div></div></div>
+
+<div id=vk class=kiosk>
+ <div class=stage><video id=kv autoplay playsinline muted></video><canvas id=ov class=ov></canvas></div>
+ <div style=text-align:center;font-size:12px;color:var(--mut)><span style=color:#22d3ee>●</span> ojos <span style=color:#fbbf24>●</span> nariz <span style=color:#f472b6>●</span> boca · detector en vivo</div>
+ <div id=res>Enfoca tu cara…</div>
+ <button style=width:100%;padding:18px;font-size:17px onclick=mark()><svg class="ic lg" viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M20 6 9 17l-5-5"/></svg>Marcar asistencia</button>
+</div>
+
+<div id=va class=wrap style=display:none>
+ <div class=kpis><div class=kpi><div class=n id=kp>0</div><div class=l>Personas</div></div><div class=kpi><div class=n id=km>0</div><div class=l>Marcas hoy</div></div><div class=kpi><div class=n id=kh>0</div><div class=l>Presentes</div></div></div>
+ <div class=card><h2>Enrolar persona</h2>
+  <input id=nm placeholder="Nombre" style=margin-bottom:10px>
+  <div class=stage><video id=av autoplay playsinline muted></video></div>
+  <button style=width:100%;margin-top:10px onclick=enroll()>Capturar y enrolar</button>
+  <p style=margin-top:8px><span id=em></span></p></div>
+ <div class=card><h2>Personas (<span id=pc>0</span>)</h2><div id=pl></div></div>
+ <div class=card><h2>Configuración</h2>
+  <label><small>Nombre del negocio</small><input id=bz placeholder="(vacío)"></label>
+  <label style=margin-top:12px><small>Umbral de reconocimiento · <b id=tv>0.35</b></small><input id=th type=range min=0.25 max=0.6 step=0.01></label>
+  <label style=margin-top:12px><small>Anti-duplicado · <b id=dv>5</b> min</small><input id=dw type=range min=0 max=30 step=1></label>
+  <div class=row style=margin-top:14px;gap:9px><input id=lv type=checkbox> <small style=color:var(--txt)>Anti-foto (liveness) activado</small></div>
+  <label style=margin-top:12px><small>Exigencia anti-foto · <b id=ltv>0.5</b></small><input id=lt type=range min=0.3 max=0.8 step=0.05></label>
+  <button style=margin-top:14px onclick=savecfg()>Guardar</button> <span id=cm></span></div>
+ <div class=card><h2>Calibrar anti-foto</h2><p><small>Actívalo solo si tu cara real da <b>alto</b> y una foto/pantalla da <b>bajo</b>. Ajusta el umbral arriba con estos valores.</small></p>
+  <button class=sec onclick=calibTgl() id=calibbtn>Probar en vivo</button>
+  <div id=calibbox style=display:none;margin-top:10px><div class=stage><video id=clv autoplay playsinline muted></video></div><div id=calibval style=text-align:center;font-size:26px;font-weight:800;margin-top:8px>—</div></div></div>
+ <div class=card><h2>Backup (respaldo)</h2><p><small>Exporta para guardar/mover; importa pegando el texto.</small></p>
+  <div class=row><button class=sec onclick=exportData()>Exportar</button><button class=sec onclick=importData()>Importar</button></div>
+  <textarea id=bk placeholder="datos de respaldo (JSON)" style="width:100%;height:74px;margin-top:8px;font-size:11px;font-family:monospace;border-radius:11px;border:1px solid var(--line);background:#0b101c;color:#fff;padding:10px"></textarea></div>
+ <div class=card><h2>Reporte del día</h2><table id=rp></table></div>
+ <div class=card><h2>Marcas recientes</h2><table id=lg></table></div>
+</div>
+
+<script src="engine.js"></script>
+<script src="ort/ort.min.js"></script>
+<script>
+function tell(o){fetch('/poc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)})}
+window.onerror=(m,s,l)=>tell({app:'standalone',err:''+m+' @'+l});
+const $=id=>document.getElementById(id);
+function p2(n){return String(n).padStart(2,'0')}
+function nowStr(){let d=new Date();return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())}
+const DB={
+ cfg(){return Object.assign({threshold:0.35,liveness:false,live_threshold:0.5,dup_window:300,business:''},JSON.parse(localStorage.getItem('cfg')||'{}'))},
+ setCfg(c){localStorage.setItem('cfg',JSON.stringify(c))},
+ people(){return JSON.parse(localStorage.getItem('people')||'[]')},
+ setPeople(p){localStorage.setItem('people',JSON.stringify(p))},
+ enroll(name,emb){let p=this.people();p.push({name,emb:Array.from(emb)});this.setPeople(p)},
+ del(name){this.setPeople(this.people().filter(x=>x.name!=name))},
+ log(){return JSON.parse(localStorage.getItem('log')||'[]')},
+ setLog(l){localStorage.setItem('log',JSON.stringify(l))},
+ today(name){let d=nowStr().slice(0,10);return this.log().filter(r=>r[1]==name&&r[0].startsWith(d)).map(r=>r[0]).sort()},
+ mark(name,tipo){let l=this.log();l.push([nowStr(),name,tipo]);this.setLog(l)}
+};
+function identify(emb){let p=DB.people();if(!p.length)return{name:'desconocido',sim:0};
+ let best={name:'',sim:-2};for(const x of p){let s=ENGINE.cosine(emb,Float32Array.from(x.emb));if(s>best.sim)best={name:x.name,sim:s};}
+ return best.sim>=DB.cfg().threshold?best:{name:'desconocido',sim:best.sim};}
+
+let stream=null;
+function show(w){tk.classList.toggle('on',w=='k');ta.classList.toggle('on',w=='a');vk.style.display=w=='k'?'flex':'none';va.style.display=w=='a'?'block':'none';if(w=='a')loadAdmin();}
+
+(async()=>{try{
+ ort.env.wasm.wasmPaths=location.origin+'/ort/';ort.env.wasm.numThreads=1;ort.env.wasm.proxy=false;ort.env.wasm.simd=true;
+ $('bootmsg').textContent='Cargando detección…'; await ENGINE.loadDet('models/detection.onnx');
+ $('bootmsg').textContent='Cargando reconocimiento…'; await ENGINE.loadRec('models/recognition.onnx');
+ $('bootmsg').textContent='Cargando anti-foto…'; await ENGINE.loadSpoof('models/anti_spoof.onnx');
+ console.log('DIAG MODELS_OK');
+ $('bootmsg').textContent='Encendiendo cámara…';
+ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640}});
+ kv.srcObject=stream; av.srcObject=stream;
+ await new Promise(r=>kv.onloadedmetadata=r);
+ ov.width=kv.videoWidth; ov.height=kv.videoHeight;
+ let biz=DB.cfg().business; if(biz){$('biz').textContent=biz;}
+ show('k'); $('boot').style.display='none'; loop(); console.log('DIAG APP_READY');
+}catch(e){$('bootmsg').textContent='Error: '+e; console.error('DIAG BOOT_ERR '+(e&&e.stack||e));}})();
+
+const oc=ov.getContext('2d'), COL=['#22d3ee','#22d3ee','#fbbf24','#f472b6','#f472b6'];
+let detecting=false;
+let lastFaces=[];
+function bracket(x1,y1,x2,y2){                    // marco de esquinas estilo escáner
+ const w=x2-x1,h=y2-y1,L=Math.min(w,h)*0.24,lw=Math.max(3,ov.width/110);
+ oc.strokeStyle='#6366f1';oc.lineWidth=lw;oc.lineCap='round';oc.shadowColor='#6366f1';oc.shadowBlur=16;
+ oc.beginPath();
+ oc.moveTo(x1,y1+L);oc.lineTo(x1,y1);oc.lineTo(x1+L,y1);          // sup-izq
+ oc.moveTo(x2-L,y1);oc.lineTo(x2,y1);oc.lineTo(x2,y1+L);          // sup-der
+ oc.moveTo(x2,y2-L);oc.lineTo(x2,y2);oc.lineTo(x2-L,y2);          // inf-der
+ oc.moveTo(x1+L,y2);oc.lineTo(x1,y2);oc.lineTo(x1,y2-L);          // inf-izq
+ oc.stroke();oc.shadowBlur=0;
+}
+function paint(){                                 // repinta ~30fps para animar el escaneo
+ oc.clearRect(0,0,ov.width,ov.height);
+ const ph=(Date.now()%1600)/1600;                 // fase 0..1 para la línea de escaneo
+ for(const f of lastFaces){
+  bracket(f.x1,f.y1,f.x2,f.y2);
+  // línea de escaneo que recorre el rostro
+  const sy=f.y1+(f.y2-f.y1)*ph;
+  const g=oc.createLinearGradient(f.x1,sy-14,f.x1,sy+14);
+  g.addColorStop(0,'#6366f100');g.addColorStop(0.5,'#22d3eecc');g.addColorStop(1,'#6366f100');
+  oc.fillStyle=g;oc.fillRect(f.x1,sy-14,f.x2-f.x1,28);
+  // 5 puntos con glow
+  f.pts.forEach((p,i)=>{oc.fillStyle=COL[i];oc.shadowColor=COL[i];oc.shadowBlur=12;oc.beginPath();oc.arc(p[0],p[1],Math.max(4,ov.width/95),0,7);oc.fill();});oc.shadowBlur=0;
+  // etiqueta
+  oc.fillStyle='#c7d2fe';oc.font='bold '+Math.max(13,ov.width/28)+'px sans-serif';oc.fillText('rostro '+Math.round(f.s*100)+'%',f.x1,f.y1-9);
+ }
+ requestAnimationFrame(paint);
+}
+async function loop(){                             // detección (más lenta) actualiza lastFaces
+ if(vk.style.display!='none' && !detecting){detecting=true;
+  try{lastFaces=await ENGINE.detect(kv,0.5);}catch(e){}
+  detecting=false;}
+ setTimeout(loop,140);
+}
+requestAnimationFrame(paint);
+let busy=false;
+async function mark(){if(busy)return;busy=true;res.textContent='…';res.className='';
+ try{let r=await ENGINE.embedFace(kv,0.5);
+  if(!r){res.textContent='Sin rostro';res.className='no';return;}
+  let cfg=DB.cfg(), live=await ENGINE.antiSpoof(kv,r.box);
+  if(cfg.liveness&&live!=null&&live<cfg.live_threshold){res.textContent='Cara real, no foto';res.className='no';return;}
+  let id=identify(r.emb);
+  if(id.name=='desconocido'){res.textContent='No reconocido';res.className='no';return;}
+  let tm=DB.today(id.name), now=new Date();
+  if(tm.length){let last=new Date(tm[tm.length-1]); if((now-last)/1000<cfg.dup_window){res.textContent=id.name+' ya marcó '+tm[tm.length-1].slice(11,16);res.className='';return;}}
+  let tipo=tm.length==0?'entrada':'salida', h='';
+  if(tipo=='salida'){let hr=Math.round((now-new Date(tm[0]))/360000)/10;h=' ('+hr+'h)';}
+  DB.mark(id.name,tipo);
+  res.textContent='✓ '+id.name+' · '+tipo.toUpperCase()+' '+nowStr().slice(11,16)+h;res.className='ok';
+ }catch(e){res.textContent='Error';res.className='no';}
+ finally{setTimeout(()=>{res.textContent='Enfoca tu cara…';res.className='';},3500);busy=false;}
+}
+async function enroll(){let n=nm.value.trim();if(!n){em.textContent='falta el nombre';return;}
+ em.textContent='procesando…';
+ try{let r=await ENGINE.embedFace(av,0.5);if(!r){em.textContent='no se detectó cara';return;}
+  let p=DB.people(),best={name:'',sim:-2};
+  for(const x of p){let s=ENGINE.cosine(r.emb,Float32Array.from(x.emb));if(s>best.sim)best={name:x.name,sim:s};}
+  if(best.sim>=0.5){em.textContent='Esta cara ya está registrada como "'+best.name+'" ('+best.sim.toFixed(2)+')';return;}
+  DB.enroll(n,r.emb);em.textContent='enrolado ✓';nm.value='';loadAdmin();
+ }catch(e){em.textContent='error: '+e;}}
+function delP(n){if(confirm('¿Eliminar a '+n+'?')){DB.del(n);loadAdmin();}}
+function report(){let d=nowStr().slice(0,10),by={};for(let r of DB.log())if(r[0].startsWith(d)){(by[r[1]]=by[r[1]]||[]).push(r[0]);}
+ return Object.entries(by).map(([n,ts])=>{ts.sort();let h=ts.length>1?Math.round((new Date(ts[ts.length-1])-new Date(ts[0]))/360000)/10:0;
+  return{name:n,ent:ts[0].slice(11,16),sal:ts.length>1?ts[ts.length-1].slice(11,16):'—',horas:h,marcas:ts.length};}).sort((a,b)=>a.ent<b.ent?-1:1);}
+function loadAdmin(){let c=DB.cfg();bz.value=c.business;th.value=c.threshold;tv.textContent=c.threshold;dw.value=Math.round(c.dup_window/60);dv.textContent=Math.round(c.dup_window/60);lv.checked=c.liveness;lt.value=c.live_threshold;ltv.textContent=c.live_threshold;
+ let ppl=DB.people();pc.textContent=ppl.length;kp.textContent=ppl.length;
+ pl.innerHTML=ppl.map(x=>'<div class=per><div class=av>'+x.name[0].toUpperCase()+'</div><span style=flex:1>'+x.name+'</span><button class=sec style=padding:9px11px onclick="delP(\''+x.name.replace(/'/g,"\\'")+'\')">✕</button></div>').join('')||'<small>vacío</small>';
+ let rep=report();km.textContent=rep.reduce((a,b)=>a+b.marcas,0);kh.textContent=rep.length;
+ rp.innerHTML='<tr><th>Persona</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr>'+rep.map(r=>'<tr><td>'+r.name+'</td><td>'+r.ent+'</td><td>'+r.sal+'</td><td>'+(r.horas||'—')+'</td></tr>').join('')||'<tr><td colspan=4><small>sin marcas hoy</small></td></tr>';
+ let lg2=DB.log().slice(-30).reverse();lg.innerHTML='<tr><th>Hora</th><th>Nombre</th><th>Tipo</th></tr>'+lg2.map(r=>'<tr><td>'+r[0].slice(5,16)+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('')||'<tr><td colspan=3><small>sin marcas</small></td></tr>';}
+th.oninput=()=>tv.textContent=th.value;dw.oninput=()=>dv.textContent=dw.value;lt.oninput=()=>ltv.textContent=lt.value;
+function savecfg(){DB.setCfg({business:bz.value.trim(),threshold:+th.value,dup_window:+dw.value*60,liveness:lv.checked,live_threshold:+lt.value});
+ cm.textContent='guardado ✓';$('biz').textContent=bz.value.trim()||'Asistencia';}
+function exportData(){bk.value=JSON.stringify({v:1,people:DB.people(),log:DB.log(),cfg:DB.cfg()});try{navigator.clipboard.writeText(bk.value);}catch(e){}}
+function importData(){try{let d=JSON.parse(bk.value);if(d.people)DB.setPeople(d.people);if(d.log)DB.setLog(d.log);if(d.cfg)DB.setCfg(d.cfg);loadAdmin();alert('Importado: '+(d.people?d.people.length:0)+' personas');}catch(e){alert('JSON inválido');}}
+let calibOn=false;
+function calibTgl(){calibOn=!calibOn;calibbox.style.display=calibOn?'block':'none';calibbtn.textContent=calibOn?'Detener':'Probar en vivo';if(calibOn){clv.srcObject=stream;calibLoop();}}
+async function calibLoop(){if(!calibOn)return;
+ try{let b=ENGINE.biggest(await ENGINE.detect(clv,0.5));
+  if(b){let live=await ENGINE.antiSpoof(clv,b);calibval.textContent='Real: '+(live*100).toFixed(0)+'%';calibval.style.color=live>=0.5?'var(--ok)':'var(--no)';}
+  else{calibval.textContent='sin cara';calibval.style.color='var(--mut)';}
+ }catch(e){}
+ setTimeout(calibLoop,400);}
+</script>
+</html>
