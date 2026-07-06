@@ -85,6 +85,28 @@ def attendance():
     with open(ATT,"a",newline="") as f: csv.writer(f).writerow([ts,n,round(s,3),tipo])
     return jsonify(name=n,similarity=round(s,3),marked=True,tipo=tipo,time=ts,horas=horas)
 
+@app.post("/esp_mark")          # ESP32-CAM: envía el JPEG crudo en el cuerpo, respuesta simple
+def esp_mark():
+    data=request.get_data()
+    if not data or len(data)<500: return jsonify(name="sin imagen",marked=False),400
+    p=os.path.join(TMP,f"esp_{os.getpid()}_{next(_c)}.jpg")
+    with open(p,"wb") as f: f.write(data)
+    cfg=_cfg(); r=face_core.identify_live(p, threshold=float(cfg["threshold"])); os.remove(p)
+    n,s,live=r["name"],r["sim"],r["live"]
+    if n in (None,"desconocido"): return jsonify(name="desconocido",marked=False)
+    if cfg.get("liveness") and live is not None and live<float(cfg["live_threshold"]):
+        return jsonify(name=n,marked=False,spoof=True)
+    tm=_today(n); now=datetime.datetime.now()
+    if tm:
+        try:
+            if (now-datetime.datetime.fromisoformat(tm[-1])).total_seconds()<float(cfg["dup_window"]):
+                return jsonify(name=n,marked=False,duplicate=True)
+        except ValueError: pass
+    tipo="entrada" if len(tm)==0 else "salida"
+    ts=now.isoformat(timespec="seconds")
+    with open(ATT,"a",newline="") as f: csv.writer(f).writerow([ts,n,round(s,3),tipo])
+    return jsonify(name=n,marked=True,tipo=tipo,time=ts[11:16])
+
 @app.post("/detect")
 def detect_ep():
     p=_upload()

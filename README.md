@@ -80,12 +80,26 @@ Local-Face-Recognition-Kiosko/
 │   │   ├── models/      Modelos ONNX (se descargan con scripts/download-models.sh)
 │   │   └── ort/         Runtime onnxruntime-web (se copia con scripts/setup.sh)
 │   └── android/         Proyecto Android generado por Capacitor
-├── server/           → Versión de desarrollo en Python/Flask (misma lógica)
+├── server/           → Servidor Python/Flask (motor; corre en PC, teléfono o Raspberry)
+├── raspberry/        → Instalación y kiosko en Raspberry Pi (Pi 3/4/5/Zero 2 W)
+├── esp32-cam/        → Firmware ESP32-CAM (cámara remota que envía al servidor)
 ├── scripts/          → setup.sh · download-models.sh
 └── branding/         → logo
 ```
 
 </details>
+
+## Dónde corre — de $0 en adelante
+
+| Plataforma | Costo | Cómo |
+|---|---|---|
+| 📱 **Teléfono Android viejo** | **~$0** | El APK (`faceapp/`) — standalone, sin comprar nada |
+| 🍓 **Raspberry Pi 3/4/5/Zero 2 W** | ~$15+ | Corre `server/` en Python → ver [`raspberry/`](raspberry/) |
+| 📷 **ESP32-CAM** | ~$8 | Cámara que envía la foto al servidor → ver [`esp32-cam/`](esp32-cam/) |
+| 💻 **PC / Linux** | — | `server/` para desarrollo |
+
+Pensado para **estudiantes sin recursos**: reutiliza un teléfono olvidado, o arma un
+kiosco con una Raspberry o un ESP32-CAM baratos — todos comparten el mismo motor.
 
 ## Puesta en marcha
 
