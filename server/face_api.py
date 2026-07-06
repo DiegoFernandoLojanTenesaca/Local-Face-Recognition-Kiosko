@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/python
 # App (PWA) de asistencia facial: entrada/salida+horas, foto al enrolar, reporte, config.
-import os, sys, csv, json, re, datetime, itertools
+import os, sys, csv, json, re, datetime, itertools, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import numpy as np
 from collections import defaultdict
@@ -14,7 +14,7 @@ ICON  = os.path.expanduser("~/face_icons");    os.makedirs(ICON, exist_ok=True)
 PHOTO = os.path.expanduser("~/face_photos");   os.makedirs(PHOTO, exist_ok=True)
 ATT   = os.path.expanduser("~/attendance.csv")
 CFG   = os.path.expanduser("~/face_config.json")
-DEF   = {"business":"", "threshold":0.35, "dup_window":300, "liveness":True, "live_threshold":0.5}
+DEF   = {"business":"", "threshold":0.35, "dup_window":300, "liveness":True, "live_threshold":0.5, "tg_token":"", "tg_chat":"", "acceso_url":""}
 _c = itertools.count()
 
 def _cfg():
@@ -44,6 +44,23 @@ def _upload():
     f=request.files.get("file")
     if not f: return None
     p=os.path.join(TMP,f"u{os.getpid()}_{next(_c)}.jpg"); f.save(p); return p
+
+def _tg(msg, path=None):                       # notificacion Telegram (para ESP32 / Raspberry / servidor)
+    c=_cfg(); tok=c.get("tg_token"); chat=c.get("tg_chat")
+    if not tok or not chat: return
+    try:
+        if path and os.path.exists(path):
+            subprocess.run(["curl","-s","-F","chat_id="+str(chat),"-F","caption="+msg,"-F","photo=@"+path,
+                            f"https://api.telegram.org/bot{tok}/sendPhoto"], timeout=8, capture_output=True)
+        else:
+            subprocess.run(["curl","-s","--data-urlencode","chat_id="+str(chat),"--data-urlencode","text="+msg,
+                            f"https://api.telegram.org/bot{tok}/sendMessage"], timeout=8, capture_output=True)
+    except Exception: pass
+def _acceso():                                 # abre puerta/rele (URL de un ESP32/rele)
+    u=_cfg().get("acceso_url")
+    if u:
+        try: subprocess.run(["curl","-s",u], timeout=4, capture_output=True)
+        except Exception: pass
 
 # ---------- API ----------
 @app.post("/enroll")
@@ -91,21 +108,25 @@ def esp_mark():
     if not data or len(data)<500: return jsonify(name="sin imagen",marked=False),400
     p=os.path.join(TMP,f"esp_{os.getpid()}_{next(_c)}.jpg")
     with open(p,"wb") as f: f.write(data)
-    cfg=_cfg(); r=face_core.identify_live(p, threshold=float(cfg["threshold"])); os.remove(p)
-    n,s,live=r["name"],r["sim"],r["live"]
-    if n in (None,"desconocido"): return jsonify(name="desconocido",marked=False)
-    if cfg.get("liveness") and live is not None and live<float(cfg["live_threshold"]):
-        return jsonify(name=n,marked=False,spoof=True)
-    tm=_today(n); now=datetime.datetime.now()
-    if tm:
-        try:
-            if (now-datetime.datetime.fromisoformat(tm[-1])).total_seconds()<float(cfg["dup_window"]):
-                return jsonify(name=n,marked=False,duplicate=True)
-        except ValueError: pass
-    tipo="entrada" if len(tm)==0 else "salida"
-    ts=now.isoformat(timespec="seconds")
-    with open(ATT,"a",newline="") as f: csv.writer(f).writerow([ts,n,round(s,3),tipo])
-    return jsonify(name=n,marked=True,tipo=tipo,time=ts[11:16])
+    try:
+        cfg=_cfg(); r=face_core.identify_live(p, threshold=float(cfg["threshold"]))
+        n,s,live=r["name"],r["sim"],r["live"]
+        if n in (None,"desconocido"): return jsonify(name="desconocido",marked=False)
+        if cfg.get("liveness") and live is not None and live<float(cfg["live_threshold"]):
+            return jsonify(name=n,marked=False,spoof=True)
+        tm=_today(n); now=datetime.datetime.now()
+        if tm:
+            try:
+                if (now-datetime.datetime.fromisoformat(tm[-1])).total_seconds()<float(cfg["dup_window"]):
+                    return jsonify(name=n,marked=False,duplicate=True)
+            except ValueError: pass
+        tipo="entrada" if len(tm)==0 else "salida"
+        ts=now.isoformat(timespec="seconds")
+        with open(ATT,"a",newline="") as f: csv.writer(f).writerow([ts,n,round(s,3),tipo])
+        _tg(f"{n} · {tipo} · {ts[11:16]}", p); _acceso()
+        return jsonify(name=n,marked=True,tipo=tipo,time=ts[11:16])
+    finally:
+        if os.path.exists(p): os.remove(p)
 
 # ---------- Multi-kiosko: servidor central (varios kioscos comparten personas y registro) ----------
 CENTRAL_P=os.path.expanduser("~/central_people.json")
@@ -185,6 +206,8 @@ def set_config():
     c=_cfg()
     if request.form.get("business") is not None: c["business"]=request.form.get("business").strip()
     if request.form.get("liveness") is not None: c["liveness"]=request.form.get("liveness")=="1"
+    for k in ("tg_token","tg_chat","acceso_url"):
+        if request.form.get(k) is not None: c[k]=request.form.get(k).strip()
     for k in ("threshold","dup_window","live_threshold"):
         if request.form.get(k):
             try: c[k]=float(request.form.get(k))
