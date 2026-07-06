@@ -5,32 +5,41 @@
 :root{--bg:#0a0e17;--line:#1e2740;--txt:#e7ecf5;--mut:#8a99b5;--acc:#6366f1;--ok:#34d399;--no:#fb7185}
 *{box-sizing:border-box;font-family:-apple-system,'Segoe UI',system-ui,Arial,sans-serif;margin:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(900px 500px at 85% -10%,#4f46e522,transparent 60%),radial-gradient(700px 420px at -10% 5%,#0ea5e916,transparent 55%)}
-.top{position:sticky;top:0;z-index:9;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 15px;background:#0a0e17d9;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800;letter-spacing:-.3px}.brand .ic{color:var(--acc);width:21px;height:21px}
-.tabs{display:flex;gap:3px}.tab{color:var(--mut);font-size:13px;font-weight:600;padding:8px 13px;border-radius:10px;cursor:pointer}.tab.on{color:#fff;background:#6366f126}
-.wrap{max-width:760px;margin:0 auto;padding:16px 15px 44px}
-h2{font-size:11px;font-weight:700;letter-spacing:.7px;margin:0 0 12px;color:var(--mut);text-transform:uppercase;display:flex;align-items:center;gap:7px}h2 .ic{color:var(--acc)}
-.card{background:linear-gradient(180deg,#111725,#0d1320);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+body::before{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(1000px 560px at 88% -12%,#6366f126,transparent 60%),radial-gradient(760px 460px at -12% 4%,#0ea5e916,transparent 55%),radial-gradient(620px 600px at 50% 122%,#7c3aed14,transparent 60%)}
+.top{position:sticky;top:0;z-index:9;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:#0a0e17cc;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;letter-spacing:-.3px}.brand .ic{color:var(--acc);width:22px;height:22px;filter:drop-shadow(0 0 8px #6366f188)}
+.tabs{display:flex;gap:4px;background:#0e1424;border:1px solid var(--line);border-radius:12px;padding:3px}
+.tab{color:var(--mut);font-size:13px;font-weight:700;padding:8px 15px;border-radius:9px;cursor:pointer;transition:all .18s}.tab.on{color:#fff;background:linear-gradient(180deg,#6366f1,#4f46e5);box-shadow:0 4px 12px -4px #4f46e5}
+.subtabs{display:flex;gap:6px;margin:2px 0 14px;overflow-x:auto;padding-bottom:2px}
+.stab{flex:1;text-align:center;color:var(--mut);font-size:13px;font-weight:600;padding:11px 8px;border-radius:12px;cursor:pointer;background:#0e1424;border:1px solid var(--line);white-space:nowrap;transition:all .18s}
+.stab.on{color:#fff;background:#6366f11f;border-color:#6366f166;box-shadow:0 4px 14px -8px #6366f1}
+.wrap{max-width:760px;margin:0 auto;padding:16px 15px 46px}
+.asec{animation:fade .3s ease}@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-size:11px;font-weight:700;letter-spacing:.7px;margin:0 0 13px;color:var(--mut);text-transform:uppercase;display:flex;align-items:center;gap:7px}h2 .ic{color:var(--acc)}
+.card{background:linear-gradient(180deg,#121a2c,#0d1320);border:1px solid var(--line);border-radius:18px;padding:17px;margin:12px 0;box-shadow:0 16px 42px -28px #000e;animation:rise .35s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 .ic{width:18px;height:18px;stroke-width:2;flex:none;vertical-align:-3px}.ic.lg{width:23px;height:23px}
-button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#6366f1,#4f46e5);color:#fff;border:0;border-radius:12px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 8px 20px -10px #4f46e5;transition:transform .1s}
-button:active{transform:translateY(1px)}
-button.sec{background:#182034;border:1px solid var(--line);box-shadow:none;color:#cdd7ea}
-input{width:100%;padding:12px 13px;border-radius:11px;border:1px solid var(--line);background:#0b101c;color:#fff;font-size:15px;outline:none}
-input[type=range]{padding:0;height:5px;accent-color:var(--acc)}input[type=checkbox]{width:auto;transform:scale(1.3)}
-label small{display:block;margin-bottom:4px}
-table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px 8px;font-size:13px;border-bottom:1px solid #ffffff0d}th{color:var(--mut);font-size:10px;text-transform:uppercase}
+button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,#6d70f5,#4f46e5);color:#fff;border:0;border-radius:13px;padding:13px 18px;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 10px 24px -10px #4f46e5,inset 0 1px 0 #ffffff2e;transition:transform .1s,filter .15s}
+button:active{transform:translateY(1px) scale(.99)}button:hover{filter:brightness(1.06)}
+button.sec{background:#182034;border:1px solid var(--line);box-shadow:none;color:#cdd7ea}button.sec:hover{background:#1d2740}
+input{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#0b101c;color:#fff;font-size:15px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus{border-color:#6366f1aa;box-shadow:0 0 0 3px #6366f126}
+input[type=range]{padding:0;height:6px;accent-color:var(--acc)}input[type=checkbox]{width:auto;transform:scale(1.35)}
+label small{display:block;margin-bottom:5px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:10px 8px;font-size:13px;border-bottom:1px solid #ffffff0d}th{color:var(--mut);font-size:10px;text-transform:uppercase;letter-spacing:.4px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}small{color:var(--mut)}
-.stage{position:relative;width:100%;line-height:0;border-radius:18px;overflow:hidden;border:1px solid var(--line)}
+.stage{position:relative;width:100%;line-height:0;border-radius:20px;overflow:hidden;border:1px solid #ffffff1a;box-shadow:0 22px 52px -24px #000e,inset 0 0 0 1px #6366f11a}
 video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset:0;width:100%;height:100%}
-.kiosk{padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:11px}
-#res{font-size:20px;font-weight:800;text-align:center;min-height:28px;display:flex;align-items:center;justify-content:center;gap:9px}
+.kiosk{padding:14px 14px calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px}
+#res{font-size:19px;font-weight:800;text-align:center;min-height:52px;display:flex;align-items:center;justify-content:center;gap:9px;padding:12px 16px;border-radius:16px;background:#0e1424;border:1px solid var(--line);transition:all .2s}
+#res.ok{background:#34d39914;border-color:#34d39955;color:var(--ok);animation:pop .3s}#res.no{background:#fb718514;border-color:#fb718555;color:var(--no);animation:pop .3s}
+@keyframes pop{0%{transform:scale(.94)}60%{transform:scale(1.02)}100%{transform:scale(1)}}
 .ok{color:var(--ok)}.no{color:var(--no)}
-.per{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid #ffffff0a}.per:last-child{border:0}.per .av{width:40px;height:40px;border-radius:11px;background:#182034;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--acc);flex:none}
+.per{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid #ffffff0a}.per:last-child{border:0}.per .av{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#6366f133,#0e1424);border:1px solid #6366f133;display:flex;align-items:center;justify-content:center;color:#a5b4fc;font-weight:800;flex:none}
 .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.kpi{background:linear-gradient(180deg,#111725,#0d1320);border:1px solid var(--line);border-radius:14px;padding:13px}.kpi .n{font-size:22px;font-weight:800}.kpi .l{color:var(--mut);font-size:10px;text-transform:uppercase;margin-top:3px}
-#boot{position:fixed;inset:0;background:#0a0e17;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;z-index:20;text-align:center;padding:24px}
-.spin{width:34px;height:34px;border:3px solid #ffffff22;border-top-color:var(--acc);border-radius:50%;animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.kpi{background:linear-gradient(180deg,#121a2c,#0d1320);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 12px 30px -24px #000}.kpi .n{font-size:24px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(180deg,#fff,#a5b4fc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}.kpi .l{color:var(--mut);font-size:10px;text-transform:uppercase;margin-top:3px;letter-spacing:.4px}
+#boot{position:fixed;inset:0;background:radial-gradient(600px 400px at 50% 32%,#12183a,#0a0e17);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:20;text-align:center;padding:24px}
+.spin{width:38px;height:38px;border:3px solid #ffffff1a;border-top-color:var(--acc);border-radius:50%;animation:sp .9s linear infinite;box-shadow:0 0 26px -4px #6366f1}@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 <div id=boot><div class=spin></div><div id=bootmsg>Cargando motor de IA…</div><small>Corre 100% en tu dispositivo</small></div>
 
@@ -45,38 +54,53 @@ video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset
 </div>
 
 <div id=va class=wrap style=display:none>
- <div class=kpis><div class=kpi><div class=n id=kp>0</div><div class=l>Personas</div></div><div class=kpi><div class=n id=km>0</div><div class=l>Marcas hoy</div></div><div class=kpi><div class=n id=kh>0</div><div class=l>Presentes</div></div></div>
- <div class=card><h2>Enrolar persona</h2>
-  <input id=nm placeholder="Nombre" style=margin-bottom:10px>
-  <div class=stage><video id=av autoplay playsinline muted></video></div>
-  <button style=width:100%;margin-top:10px onclick=enroll()>Capturar y enrolar</button>
-  <p style=margin-top:8px><span id=em></span></p></div>
- <div class=card><h2>Personas (<span id=pc>0</span>)</h2><div id=pl></div></div>
- <div class=card><h2>Configuración</h2>
-  <label><small>Nombre del negocio</small><input id=bz placeholder="(vacío)"></label>
-  <label style=margin-top:12px><small>Umbral de reconocimiento · <b id=tv>0.35</b></small><input id=th type=range min=0.25 max=0.6 step=0.01></label>
-  <label style=margin-top:12px><small>Anti-duplicado · <b id=dv>5</b> min</small><input id=dw type=range min=0 max=30 step=1></label>
-  <div class=row style=margin-top:14px;gap:9px><input id=lv type=checkbox> <small style=color:var(--txt)>Anti-foto (liveness) activado</small></div>
-  <label style=margin-top:12px><small>Exigencia anti-foto · <b id=ltv>0.5</b></small><input id=lt type=range min=0.3 max=0.8 step=0.05></label>
-  <div class=row style=margin-top:14px;gap:9px><input id=vz type=checkbox> <small style=color:var(--txt)>🔊 Voz al marcar</small></div>
-  <label style=margin-top:12px><small>Hora de entrada (marca tarde después) · deja vacío para no usar</small><input id=he type=time></label>
-  <label style=margin-top:12px><small>Tolerancia de tardanza (min)</small><input id=tl type=number min=0 max=120 placeholder=10></label>
-  <label style=margin-top:12px><small>🔔 Telegram — token del bot (opcional)</small><input id=tgt placeholder="123456:ABC..."></label>
-  <label style=margin-top:12px><small>Telegram — chat ID</small><input id=tgc placeholder="ID del chat/grupo"></label>
-  <label style=margin-top:12px><small>🚪 URL para abrir puerta/relé (opcional)</small><input id=ac placeholder="http://192.168.1.60/open"></label>
-  <label style=margin-top:12px><small>🔄 Servidor central multi-kiosko (opcional)</small><input id=ce placeholder="http://192.168.1.50:8090"></label>
-  <div class=row style=margin-top:8px><button class=sec onclick=syncPull()>Sincronizar personas</button></div>
-  <button style=margin-top:14px onclick=savecfg()>Guardar</button> <span id=cm></span></div>
- <div class=card><h2>Calibrar anti-foto</h2><p><small>Actívalo solo si tu cara real da <b>alto</b> y una foto/pantalla da <b>bajo</b>. Ajusta el umbral arriba con estos valores.</small></p>
-  <button class=sec onclick=calibTgl() id=calibbtn>Probar en vivo</button>
-  <div id=calibbox style=display:none;margin-top:10px><div class=stage><video id=clv autoplay playsinline muted></video></div><div id=calibval style=text-align:center;font-size:26px;font-weight:800;margin-top:8px>—</div></div></div>
- <div class=card><h2>Backup (respaldo)</h2><p><small>Exporta para guardar/mover; importa pegando el texto.</small></p>
-  <div class=row><button class=sec onclick=exportData()>Exportar</button><button class=sec onclick=importData()>Importar</button></div>
-  <textarea id=bk placeholder="datos de respaldo (JSON)" style="width:100%;height:74px;margin-top:8px;font-size:11px;font-family:monospace;border-radius:11px;border:1px solid var(--line);background:#0b101c;color:#fff;padding:10px"></textarea></div>
- <div class=card><div class=row style=justify-content:space-between><h2 style=margin:0>Reporte</h2>
-  <select id=rgsel onchange=renderReport() style=width:auto;padding:8px 10px><option value=0>Hoy</option><option value=7>Últimos 7 días</option><option value=30>Últimos 30 días</option></select></div>
-  <table id=rp></table></div>
- <div class=card><h2>Marcas recientes</h2><table id=lg></table></div>
+ <div class=subtabs>
+  <div class=stab id=st-per onclick=adminTab('per')>Personas</div>
+  <div class=stab id=st-reg onclick=adminTab('reg')>Registro</div>
+  <div class=stab id=st-aj onclick=adminTab('aj')>Ajustes</div>
+  <div class=stab id=st-av onclick=adminTab('av')>Avanzado</div>
+ </div>
+ <div id=asec-per class=asec>
+  <div class=kpis><div class=kpi><div class=n id=kp>0</div><div class=l>Personas</div></div><div class=kpi><div class=n id=km>0</div><div class=l>Marcas hoy</div></div><div class=kpi><div class=n id=kh>0</div><div class=l>Presentes</div></div></div>
+  <div class=card><h2>Enrolar persona</h2>
+   <input id=nm placeholder="Nombre" style=margin-bottom:10px>
+   <div class=stage><video id=av autoplay playsinline muted></video></div>
+   <button style=width:100%;margin-top:10px onclick=enroll()>Capturar y enrolar</button>
+   <p style=margin-top:8px><span id=em></span></p></div>
+  <div class=card><h2>Personas (<span id=pc>0</span>)</h2><div id=pl></div></div>
+ </div>
+ <div id=asec-reg class=asec style=display:none>
+  <div class=card><div class=row style=justify-content:space-between><h2 style=margin:0>Reporte</h2>
+   <select id=rgsel onchange=renderReport() style=width:auto;padding:8px 10px><option value=0>Hoy</option><option value=7>Últimos 7 días</option><option value=30>Últimos 30 días</option></select></div>
+   <table id=rp></table></div>
+  <div class=card><h2>Marcas recientes</h2><table id=lg></table></div>
+ </div>
+ <div id=asec-aj class=asec style=display:none>
+  <div class=card><h2>Ajustes generales</h2>
+   <label><small>Nombre del negocio</small><input id=bz placeholder="(vacío)"></label>
+   <label style=margin-top:12px><small>Umbral de reconocimiento · <b id=tv>0.35</b></small><input id=th type=range min=0.25 max=0.6 step=0.01></label>
+   <label style=margin-top:12px><small>Anti-duplicado · <b id=dv>5</b> min</small><input id=dw type=range min=0 max=30 step=1></label>
+   <div class=row style=margin-top:14px;gap:9px><input id=lv type=checkbox> <small style=color:var(--txt)>Anti-foto (liveness) activado</small></div>
+   <label style=margin-top:12px><small>Exigencia anti-foto · <b id=ltv>0.5</b></small><input id=lt type=range min=0.3 max=0.8 step=0.05></label>
+   <div class=row style=margin-top:14px;gap:9px><input id=vz type=checkbox> <small style=color:var(--txt)>🔊 Voz al marcar</small></div>
+   <label style=margin-top:12px><small>Hora de entrada (marca tarde después)</small><input id=he type=time></label>
+   <label style=margin-top:12px><small>Tolerancia de tardanza (min)</small><input id=tl type=number min=0 max=120 placeholder=10></label>
+   <button style=margin-top:14px onclick=savecfg()>Guardar</button> <span id=cm></span></div>
+ </div>
+ <div id=asec-av class=asec style=display:none>
+  <div class=card><h2>Integraciones</h2>
+   <label><small>🔔 Telegram — token del bot</small><input id=tgt placeholder="123456:ABC..."></label>
+   <label style=margin-top:12px><small>Telegram — chat ID</small><input id=tgc placeholder="ID del chat/grupo"></label>
+   <label style=margin-top:12px><small>🚪 URL para abrir puerta/relé</small><input id=ac placeholder="http://192.168.1.60/open"></label>
+   <label style=margin-top:12px><small>🔄 Servidor central multi-kiosko</small><input id=ce placeholder="http://192.168.1.50:8090"></label>
+   <div class=row style=margin-top:12px;gap:9px><button class=sec onclick=syncPull()>Sincronizar</button><button onclick=savecfg()>Guardar</button> <span id=cm2></span></div></div>
+  <div class=card><h2>Calibrar anti-foto</h2><p><small>Actívalo solo si tu cara real da <b>alto</b> y una foto da <b>bajo</b>.</small></p>
+   <button class=sec onclick=calibTgl() id=calibbtn>Probar en vivo</button>
+   <div id=calibbox style=display:none;margin-top:10px><div class=stage><video id=clv autoplay playsinline muted></video></div><div id=calibval style=text-align:center;font-size:26px;font-weight:800;margin-top:8px>—</div></div></div>
+  <div class=card><h2>Backup (respaldo)</h2><p><small>Exporta para guardar/mover; importa pegando el texto.</small></p>
+   <div class=row><button class=sec onclick=exportData()>Exportar</button><button class=sec onclick=importData()>Importar</button></div>
+   <textarea id=bk placeholder="datos de respaldo (JSON)" style="width:100%;height:74px;margin-top:8px;font-size:11px;font-family:monospace;border-radius:11px;border:1px solid var(--line);background:#0b101c;color:#fff;padding:10px"></textarea></div>
+ </div>
 </div>
 
 <script src="engine.js"></script>
@@ -104,7 +128,8 @@ function identify(emb){let p=DB.people();if(!p.length)return{name:'desconocido',
  return best.sim>=DB.cfg().threshold?best:{name:'desconocido',sim:best.sim};}
 
 let stream=null;
-function show(w){tk.classList.toggle('on',w=='k');ta.classList.toggle('on',w=='a');vk.style.display=w=='k'?'flex':'none';va.style.display=w=='a'?'block':'none';if(w=='a')loadAdmin();}
+function show(w){tk.classList.toggle('on',w=='k');ta.classList.toggle('on',w=='a');vk.style.display=w=='k'?'flex':'none';va.style.display=w=='a'?'block':'none';if(w=='a'){loadAdmin();adminTab('per');}}
+function adminTab(s){['per','reg','aj','av'].forEach(x=>{document.getElementById('asec-'+x).style.display=x==s?'block':'none';document.getElementById('st-'+x).classList.toggle('on',x==s);});}
 
 (async()=>{try{
  ort.env.wasm.wasmPaths=location.origin+'/ort/';ort.env.wasm.numThreads=1;ort.env.wasm.proxy=false;ort.env.wasm.simd=true;
@@ -234,7 +259,7 @@ function loadAdmin(){let c=DB.cfg();bz.value=c.business;th.value=c.threshold;tv.
 function verFoto(s){let d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#000d;display:flex;align-items:center;justify-content:center;z-index:99;padding:20px';d.onclick=()=>d.remove();let i=new Image();i.src=s;i.style.cssText='max-width:100%;max-height:100%;border-radius:14px';d.appendChild(i);document.body.appendChild(d);}
 th.oninput=()=>tv.textContent=th.value;dw.oninput=()=>dv.textContent=dw.value;lt.oninput=()=>ltv.textContent=lt.value;
 function savecfg(){DB.setCfg(Object.assign(DB.cfg(),{business:bz.value.trim(),threshold:+th.value,dup_window:+dw.value*60,liveness:lv.checked,live_threshold:+lt.value,voz:vz.checked,entrada:he.value,tolerancia:+tl.value||0,tg_token:tgt.value.trim(),tg_chat:tgc.value.trim(),acceso_url:ac.value.trim(),central_url:ce.value.trim()}));
- cm.textContent='guardado ✓';$('biz').textContent=bz.value.trim()||'Asistencia';}
+ cm.textContent='guardado ✓';let m2=document.getElementById('cm2');if(m2)m2.textContent='guardado ✓';$('biz').textContent=bz.value.trim()||'Asistencia';}
 function exportData(){bk.value=JSON.stringify({v:1,people:DB.people(),log:DB.log(),cfg:DB.cfg()});try{navigator.clipboard.writeText(bk.value);}catch(e){}}
 function importData(){try{let d=JSON.parse(bk.value);if(d.people)DB.setPeople(d.people);if(d.log)DB.setLog(d.log);if(d.cfg)DB.setCfg(d.cfg);loadAdmin();alert('Importado: '+(d.people?d.people.length:0)+' personas');}catch(e){alert('JSON inválido');}}
 let calibOn=false;
