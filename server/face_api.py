@@ -15,6 +15,8 @@ PHOTO = os.path.expanduser("~/face_photos");   os.makedirs(PHOTO, exist_ok=True)
 ATT   = os.path.expanduser("~/attendance.csv")
 CFG   = os.path.expanduser("~/face_config.json")
 DEF   = {"business":"", "threshold":0.35, "dup_window":300, "liveness":True, "live_threshold":0.5, "tg_token":"", "tg_chat":"", "acceso_url":""}
+DIAS  = ["lun","mar","mié","jue","vie","sáb","dom"]
+MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"]
 _c = itertools.count()
 
 def _cfg():
@@ -123,7 +125,10 @@ def esp_mark():
         tipo="entrada" if len(tm)==0 else "salida"
         ts=now.isoformat(timespec="seconds")
         with open(ATT,"a",newline="") as f: csv.writer(f).writerow([ts,n,round(s,3),tipo])
-        _tg(f"{n} · {tipo} · {ts[11:16]}", p); _acceso()
+        biz=cfg.get("business")
+        fecha=f"{DIAS[now.weekday()]} {now.day:02d} {MESES[now.month-1]} {now.year}"
+        cap=f"👤 {n}\n{'🟢 ENTRADA' if tipo=='entrada' else '🔴 SALIDA'} · {ts[11:16]}\n📅 {fecha}"+(f"\n🏢 {biz}" if biz else "")
+        _tg(cap, p); _acceso()
         return jsonify(name=n,marked=True,tipo=tipo,time=ts[11:16])
     finally:
         if os.path.exists(p): os.remove(p)

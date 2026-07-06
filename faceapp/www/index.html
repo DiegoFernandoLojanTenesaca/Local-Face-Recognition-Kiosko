@@ -184,7 +184,9 @@ async function mark(){if(busy)return;busy=true;res.textContent='…';res.classNa
   res.innerHTML='<svg class="ic lg" viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round style=vertical-align:-5px><path d="M20 6 9 17l-5-5"/></svg> '+id.name+' · '+tipo.toUpperCase()+et+' '+ts.slice(11,16)+h;res.className=tarde?'':'ok';
   say((tipo=='entrada'?'Bienvenido ':'Hasta luego ')+id.name+(tarde?', llegaste tarde':''));
   let cv=document.getElementById('c');cv.width=kv.videoWidth;cv.height=kv.videoHeight;cv.getContext('2d').drawImage(kv,0,0);
-  cv.toBlob(b=>{ if(b){ tg(id.name+' · '+tipo+et+' · '+ts.slice(11,16), b); if(cfg.evidencia)saveEvidence(ts,b);} },'image/jpeg',0.7);
+  let fecha=new Date().toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  let cap='👤 '+id.name+'\n'+(tipo=='entrada'?'🟢 ENTRADA':'🔴 SALIDA')+' · '+ts.slice(11,16)+'\n📅 '+fecha+(tarde?'\n⚠️ Llegó tarde':'')+(cfg.business?'\n🏢 '+cfg.business:'');
+  cv.toBlob(b=>{ if(b){ tg(cap, b); if(cfg.evidencia)saveEvidence(ts,b);} },'image/jpeg',0.7);
   if(cfg.acceso_url) fetch(cfg.acceso_url).catch(()=>{});                                  // abrir puerta (relé/ESP32)
   if(cfg.central_url) fetch(cfg.central_url.replace(/\/+$/,'')+'/sync/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:ts,name:id.name,tipo:tipo,tarde:tarde?'tarde':''})}).catch(()=>{});
  }catch(e){res.textContent='Error';res.className='no';}
