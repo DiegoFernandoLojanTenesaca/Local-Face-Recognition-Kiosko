@@ -177,7 +177,7 @@ function bracket(x1,y1,x2,y2){
  oc.stroke();oc.shadowBlur=0;
 }
 function mesh(x1,y1,x2,y2){                        // malla curva que cubre la cara
- const w=x2-x1,h=y2-y1,C=8,R=10;
+ const w=x2-x1,h=y2-y1,C=6,R=7;
  oc.save();oc.beginPath();oc.ellipse((x1+x2)/2,(y1+y2)/2,w*0.52,h*0.54,0,0,7);oc.clip();
  oc.strokeStyle='rgba(103,232,249,.28)';oc.lineWidth=1;
  for(let i=0;i<=C;i++){let t=i/C,x=x1+w*t;oc.beginPath();
@@ -210,15 +210,25 @@ async function loop(){
  if(vk.style.display!='none' && !detecting){detecting=true;
   try{lastFaces=await ENGINE.detect(kv,0.5);}catch(e){}
   detecting=false;}
- setTimeout(loop,120);
+ setTimeout(loop,300);   // menos inferencia = menos bloqueo del hilo; el lerp mantiene el overlay fluido
 }
 requestAnimationFrame(paint);
-let busy=false;
-function say(t){let c=DB.cfg();if(!c.voz)return;try{let u=new SpeechSynthesisUtterance(t);u.lang='es-ES';speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+let busy=false, actx=null;
+function beep(ok){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state=='suspended')actx.resume();
+ let t=actx.currentTime;(ok?[880,1320]:[440,330]).forEach((f,i)=>{let o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(actx.destination);
+  let s=t+i*0.15;g.gain.setValueAtTime(0.0001,s);g.gain.exponentialRampToValueAtTime(0.35,s+0.02);g.gain.exponentialRampToValueAtTime(0.0001,s+0.14);o.start(s);o.stop(s+0.15);});}catch(e){}}
+function say(t,ok){let c=DB.cfg();if(!c.voz)return;
+ try{let v=speechSynthesis.getVoices();
+  if(v&&v.length){let u=new SpeechSynthesisUtterance(t);u.lang='es-ES';speechSynthesis.cancel();speechSynthesis.speak(u);}
+  else beep(ok!==false);                                    // sin motor TTS → tono de confirmación
+ }catch(e){beep(ok!==false);}}
 function esTarde(){let c=DB.cfg();if(!c.entrada)return false;let p=c.entrada.split(':');let lim=new Date();lim.setHours(+p[0],(+p[1]||0)+(+c.tolerancia||0),0,0);return new Date()>lim;}
-function tg(msg,blob){let c=DB.cfg();if(!c.tg_token||!c.tg_chat)return;
- try{ if(blob){let f=new FormData();f.append('chat_id',c.tg_chat);f.append('caption',msg);f.append('photo',blob,'e.jpg');fetch('https://api.telegram.org/bot'+c.tg_token+'/sendPhoto',{method:'POST',body:f});}
-  else fetch('https://api.telegram.org/bot'+c.tg_token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c.tg_chat,text:msg})}); }catch(e){}}
+async function tg(msg){let c=DB.cfg();if(!c.tg_token||!c.tg_chat)return;   // envío nativo (CapacitorHttp) para evitar CORS del WebView
+ const url='https://api.telegram.org/bot'+c.tg_token+'/sendMessage', data={chat_id:c.tg_chat,text:msg};
+ try{const H=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.CapacitorHttp;
+  if(H)await H.post({url,headers:{'Content-Type':'application/json'},data});
+  else await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+ }catch(e){}}
 function saveEvidence(ts,blob){let im=new Image();im.onload=()=>{let sc=160/Math.max(im.width,im.height),cn=document.createElement('canvas');
  cn.width=im.width*sc;cn.height=im.height*sc;cn.getContext('2d').drawImage(im,0,0,cn.width,cn.height);
  let e=JSON.parse(localStorage.getItem('evi')||'{}');e[ts]=cn.toDataURL('image/jpeg',0.6);
@@ -227,9 +237,9 @@ async function mark(){if(busy)return;busy=true;res.textContent='…';res.classNa
  try{let r=await ENGINE.embedFace(kv,0.5);
   if(!r){res.textContent='Sin rostro';res.className='no';return;}
   let cfg=DB.cfg(), live=await ENGINE.antiSpoof(kv,r.box);
-  if(cfg.liveness&&live!=null&&live<cfg.live_threshold){res.textContent='Cara real, no foto';res.className='no';say('Usa tu cara real');return;}
+  if(cfg.liveness&&live!=null&&live<cfg.live_threshold){res.textContent='Cara real, no foto';res.className='no';say('Usa tu cara real',false);return;}
   let id=identify(r.emb);
-  if(id.name=='desconocido'){res.textContent='No reconocido';res.className='no';say('No reconocido');return;}
+  if(id.name=='desconocido'){res.textContent='No reconocido';res.className='no';say('No reconocido',false);return;}
   let tm=DB.today(id.name), now=new Date();
   if(tm.length){let last=new Date(tm[tm.length-1]); if((now-last)/1000<cfg.dup_window){res.textContent=id.name+' ya marcó '+tm[tm.length-1].slice(11,16);res.className='';return;}}
   let tipo=tm.length==0?'entrada':'salida', h='', tarde=(tipo=='entrada'&&esTarde()), ts=nowStr();
@@ -241,7 +251,8 @@ async function mark(){if(busy)return;busy=true;res.textContent='…';res.classNa
   let cv=document.getElementById('c');cv.width=kv.videoWidth;cv.height=kv.videoHeight;cv.getContext('2d').drawImage(kv,0,0);
   let fecha=new Date().toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
   let cap='👤 '+id.name+'\n'+(tipo=='entrada'?'🟢 ENTRADA':'🔴 SALIDA')+' · '+ts.slice(11,16)+'\n📅 '+fecha+(tarde?'\n⚠️ Llegó tarde':'')+(cfg.business?'\n🏢 '+cfg.business:'');
-  cv.toBlob(b=>{ if(b){ tg(cap, b); if(cfg.evidencia)saveEvidence(ts,b);} },'image/jpeg',0.7);
+  tg(cap);                                                                                 // notifica a Telegram (texto)
+  if(cfg.evidencia)cv.toBlob(b=>{if(b)saveEvidence(ts,b);},'image/jpeg',0.7);               // guarda foto de evidencia local
   if(cfg.acceso_url) fetch(cfg.acceso_url).catch(()=>{});                                  // abrir puerta (relé/ESP32)
   if(cfg.central_url) fetch(cfg.central_url.replace(/\/+$/,'')+'/sync/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:ts,name:id.name,tipo:tipo,tarde:tarde?'tarde':''})}).catch(()=>{});
  }catch(e){res.textContent='Error';res.className='no';}
