@@ -102,6 +102,7 @@ video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset
   <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Notificaciones Telegram</h2>
    <div class=fld><label>Token del bot</label><input id=tgt placeholder="123456:ABC..."></div>
    <div class=fld><label>Chat ID</label><input id=tgc placeholder="ID del chat o grupo"></div>
+   <div class=row><button class=sec type=button onclick=testTg()>Probar Telegram</button> <span id=tgm style=font-size:13px></span></div>
    <div class=hint>Al marcar llega una foto con los datos al chat.</div></div>
   <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1=15 x2=3 y1=12 y2=12/></svg>Control de acceso</h2>
    <div class=fld><label>URL para abrir puerta o relé</label><input id=ac placeholder="http://192.168.1.60/open"><div class=hint>Se abre al reconocer (ej. ESP32 con relé).</div></div></div>
@@ -115,7 +116,8 @@ video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset
   <div class=card><h2><svg class=ic viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg>Respaldo</h2>
    <div class=hint style=margin-bottom:12px>Exporta para guardar o mover; importa pegando el texto.</div>
    <div class=row><button class=sec onclick=exportData()>Exportar</button><button class=sec onclick=importData()>Importar</button></div>
-   <textarea id=bk placeholder="datos de respaldo" style="width:100%;height:74px;margin-top:10px;font-size:11px;font-family:monospace;border-radius:12px;border:1px solid var(--line);background:#0b101c;color:#fff;padding:10px"></textarea></div>
+   <textarea id=bk placeholder="datos de respaldo" style="width:100%;height:74px;margin-top:10px;font-size:11px;font-family:monospace;border-radius:12px;border:1px solid var(--line);background:#0b101c;color:#fff;padding:10px"></textarea>
+   <button type=button onclick=wipeData() style="width:100%;margin-top:6px;background:#450a0a;border:1px solid #991b1b;color:#fecaca">Borrar todos los datos</button></div>
  </div>
 </div>
 
@@ -185,20 +187,25 @@ function say(t,ok){let c=DB.cfg();if(!c.voz)return;
   if(v&&v.length){let u=new SpeechSynthesisUtterance(t);u.lang='es-ES';speechSynthesis.cancel();speechSynthesis.speak(u);}
   else beep(ok!==false);                                    // sin motor TTS → tono de confirmación
  }catch(e){beep(ok!==false);}}
+let gi=0; const GUIA=['Acércate y enfoca tu rostro','Cuádrate frente a la cámara','Centra tu cara, no te muevas','Acércate un poco más','Mira de frente a la cámara'];
+function guia(){let m=GUIA[gi++%GUIA.length];res.textContent=m;res.className='no';say(m,false);}   // mensaje guía + tono, en vez de "Error"
 function esTarde(){let c=DB.cfg();if(!c.entrada)return false;let p=c.entrada.split(':');let lim=new Date();lim.setHours(+p[0],(+p[1]||0)+(+c.tolerancia||0),0,0);return new Date()>lim;}
-async function tg(msg){let c=DB.cfg();if(!c.tg_token||!c.tg_chat)return;   // envío nativo (CapacitorHttp) para evitar CORS del WebView
- const url='https://api.telegram.org/bot'+c.tg_token+'/sendMessage', data={chat_id:c.tg_chat,text:msg};
- try{const H=window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.CapacitorHttp;
-  if(H)await H.post({url,headers:{'Content-Type':'application/json'},data});
-  else await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
- }catch(e){}}
+async function testTg(){let c=DB.cfg(),m=$('tgm');m.style.color='#94a3b8';m.textContent='enviando…';
+ if(!c.tg_token||!c.tg_chat){m.style.color='#f87171';m.textContent='falta token o chat';return;}
+ try{const r=await fetch('https://api.telegram.org/bot'+c.tg_token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c.tg_chat,text:'Prueba desde la app ✔'})});
+  const t=await r.text();m.style.color=(r.status==200?'#4ade80':'#f87171');m.textContent='status '+r.status+' · '+t.slice(0,90);}
+ catch(e){m.style.color='#f87171';m.textContent='ERROR: '+(e&&e.message||e);}}
+async function tg(msg){let c=DB.cfg();if(!c.tg_token||!c.tg_chat){console.log('TG skip token='+!!c.tg_token+' chat='+!!c.tg_chat);return;}
+ try{const r=await fetch('https://api.telegram.org/bot'+c.tg_token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c.tg_chat,text:msg})});
+  console.log('TG status='+r.status);                      // con CapacitorHttp enabled, este fetch va nativo (sin CORS)
+ }catch(e){console.log('TG ERR '+(e&&e.message||e));}}
 function saveEvidence(ts,blob){let im=new Image();im.onload=()=>{let sc=160/Math.max(im.width,im.height),cn=document.createElement('canvas');
  cn.width=im.width*sc;cn.height=im.height*sc;cn.getContext('2d').drawImage(im,0,0,cn.width,cn.height);
  let e=JSON.parse(localStorage.getItem('evi')||'{}');e[ts]=cn.toDataURL('image/jpeg',0.6);
  let ks=Object.keys(e).sort();while(ks.length>40)delete e[ks.shift()];localStorage.setItem('evi',JSON.stringify(e));URL.revokeObjectURL(im.src);};im.src=URL.createObjectURL(blob);}
 async function mark(){if(busy)return;busy=true;res.textContent='…';res.className='';
  try{let r=await ENGINE.embedFace(kv,0.5);
-  if(!r){res.textContent='Sin rostro';res.className='no';return;}
+  if(!r){guia();return;}
   let cfg=DB.cfg(), live=await ENGINE.antiSpoof(kv,r.box);
   if(cfg.liveness&&live!=null&&live<cfg.live_threshold){res.textContent='Cara real, no foto';res.className='no';say('Usa tu cara real',false);return;}
   let id=identify(r.emb);
@@ -218,7 +225,7 @@ async function mark(){if(busy)return;busy=true;res.textContent='…';res.classNa
   if(cfg.evidencia)cv.toBlob(b=>{if(b)saveEvidence(ts,b);},'image/jpeg',0.7);               // guarda foto de evidencia local
   if(cfg.acceso_url) fetch(cfg.acceso_url).catch(()=>{});                                  // abrir puerta (relé/ESP32)
   if(cfg.central_url) fetch(cfg.central_url.replace(/\/+$/,'')+'/sync/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:ts,name:id.name,tipo:tipo,tarde:tarde?'tarde':''})}).catch(()=>{});
- }catch(e){res.textContent='Error';res.className='no';}
+ }catch(e){guia();}
  finally{setTimeout(()=>{res.textContent='Enfoca tu cara…';res.className='';},3500);busy=false;}
 }
 async function enroll(){let n=nm.value.trim();if(!n){em.textContent='falta el nombre';return;}
@@ -264,6 +271,11 @@ function verFoto(s){let d=document.createElement('div');d.style.cssText='positio
 th.oninput=()=>tv.textContent=th.value;dw.oninput=()=>dv.textContent=dw.value;lt.oninput=()=>ltv.textContent=lt.value;
 function savecfg(){DB.setCfg(Object.assign(DB.cfg(),{business:bz.value.trim(),threshold:+th.value,dup_window:+dw.value*60,liveness:lv.checked,live_threshold:+lt.value,voz:vz.checked,entrada:he.value,tolerancia:+tl.value||0,tg_token:tgt.value.trim(),tg_chat:tgc.value.trim(),acceso_url:ac.value.trim(),central_url:ce.value.trim()}));
  cm.textContent='guardado ✓';let m2=document.getElementById('cm2');if(m2)m2.textContent='guardado ✓';$('biz').textContent=bz.value.trim()||'Asistencia';}
+function wipeData(){                                        // borra personas + historial + evidencias (mantiene ajustes)
+ if(!confirm('¿Borrar TODAS las personas y TODO el historial de asistencia?\nEsto no se puede deshacer.'))return;
+ if(!confirm('Última confirmación: se eliminarán todos los datos.'))return;
+ localStorage.removeItem('people');localStorage.removeItem('log');localStorage.removeItem('evi');
+ loadAdmin();alert('Datos eliminados. Los ajustes se mantienen.');}
 function exportData(){bk.value=JSON.stringify({v:1,people:DB.people(),log:DB.log(),cfg:DB.cfg()});try{navigator.clipboard.writeText(bk.value);}catch(e){}}
 function importData(){try{let d=JSON.parse(bk.value);if(d.people)DB.setPeople(d.people);if(d.log)DB.setLog(d.log);if(d.cfg)DB.setCfg(d.cfg);loadAdmin();alert('Importado: '+(d.people?d.people.length:0)+' personas');}catch(e){alert('JSON inválido');}}
 let calibOn=false;
