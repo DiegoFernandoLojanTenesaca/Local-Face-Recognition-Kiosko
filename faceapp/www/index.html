@@ -165,54 +165,17 @@ function adminTab(s){['per','reg','aj','av'].forEach(x=>{document.getElementById
 
 const oc=ov.getContext('2d'), COL=['#22d3ee','#22d3ee','#fbbf24','#f472b6','#f472b6'];
 let detecting=false;
-let lastFaces=[], sm=null;                        // sm = caja/puntos suavizados
-function bracket(x1,y1,x2,y2){
- const w=x2-x1,h=y2-y1,L=Math.min(w,h)*0.26,lw=Math.max(3,ov.width/120);
- oc.strokeStyle='#6366f1';oc.lineWidth=lw;oc.lineCap='round';oc.shadowColor='#6366f1';oc.shadowBlur=14;
- oc.beginPath();
- oc.moveTo(x1,y1+L);oc.lineTo(x1,y1);oc.lineTo(x1+L,y1);
- oc.moveTo(x2-L,y1);oc.lineTo(x2,y1);oc.lineTo(x2,y1+L);
- oc.moveTo(x2,y2-L);oc.lineTo(x2,y2);oc.lineTo(x2-L,y2);
- oc.moveTo(x1+L,y2);oc.lineTo(x1,y2);oc.lineTo(x1,y2-L);
- oc.stroke();oc.shadowBlur=0;
-}
-function mesh(x1,y1,x2,y2){                        // malla curva que cubre la cara
- const w=x2-x1,h=y2-y1,C=6,R=7;
- oc.save();oc.beginPath();oc.ellipse((x1+x2)/2,(y1+y2)/2,w*0.52,h*0.54,0,0,7);oc.clip();
- oc.strokeStyle='rgba(103,232,249,.28)';oc.lineWidth=1;
- for(let i=0;i<=C;i++){let t=i/C,x=x1+w*t;oc.beginPath();
-  for(let j=0;j<=R;j++){let u=j/R,y=y1+h*u,b=Math.sin(u*Math.PI)*(0.5-Math.abs(t-0.5))*w*0.14;
-   let xx=x+(t<0.5?b:-b);j?oc.lineTo(xx,y):oc.moveTo(xx,y);}oc.stroke();}
- for(let j=0;j<=R;j++){let u=j/R,y=y1+h*u;oc.beginPath();
-  for(let i=0;i<=C;i++){let t=i/C,x=x1+w*t,b=Math.sin(t*Math.PI)*(0.5-Math.abs(u-0.5))*h*0.12;
-   let yy=y+(u<0.5?b:-b);i?oc.lineTo(x,yy):oc.moveTo(x,yy);}oc.stroke();}
- oc.restore();
-}
-function paint(){
+function drawFaces(faces){                         // solo los 5 puntos, sin animación (repinta al detectar)
  oc.clearRect(0,0,ov.width,ov.height);
- const f=lastFaces.length?lastFaces.reduce((a,b)=>((b.x2-b.x1)*(b.y2-b.y1)>(a.x2-a.x1)*(a.y2-a.y1)?b:a)):null;
- if(f){
-  if(!sm)sm={x1:f.x1,y1:f.y1,x2:f.x2,y2:f.y2,pts:f.pts.map(p=>[p[0],p[1]]),s:f.s};
-  const k=0.4;
-  sm.x1+=(f.x1-sm.x1)*k;sm.y1+=(f.y1-sm.y1)*k;sm.x2+=(f.x2-sm.x2)*k;sm.y2+=(f.y2-sm.y2)*k;sm.s=f.s;
-  for(let i=0;i<5;i++){sm.pts[i][0]+=(f.pts[i][0]-sm.pts[i][0])*k;sm.pts[i][1]+=(f.pts[i][1]-sm.pts[i][1])*k;}
-  mesh(sm.x1,sm.y1,sm.x2,sm.y2);
-  bracket(sm.x1,sm.y1,sm.x2,sm.y2);
-  const ph=(Date.now()%1800)/1800,sy=sm.y1+(sm.y2-sm.y1)*ph;
-  const g=oc.createLinearGradient(0,sy-16,0,sy+16);g.addColorStop(0,'#22d3ee00');g.addColorStop(.5,'#67e8f9e0');g.addColorStop(1,'#22d3ee00');
-  oc.fillStyle=g;oc.fillRect(sm.x1,sy-16,sm.x2-sm.x1,32);
-  sm.pts.forEach((p,i)=>{oc.fillStyle=COL[i];oc.shadowColor=COL[i];oc.shadowBlur=10;oc.beginPath();oc.arc(p[0],p[1],Math.max(3,ov.width/110),0,7);oc.fill();});oc.shadowBlur=0;
-  oc.fillStyle='#c7d2fe';oc.font='bold '+Math.max(13,ov.width/28)+'px sans-serif';oc.fillText('rostro '+Math.round(sm.s*100)+'%',sm.x1,sm.y1-9);
- } else sm=null;
- requestAnimationFrame(paint);
+ const r=Math.max(3,ov.width/110);
+ for(const f of faces) f.pts.forEach((p,i)=>{oc.fillStyle=COL[i];oc.beginPath();oc.arc(p[0],p[1],r,0,7);oc.fill();});
 }
 async function loop(){
  if(vk.style.display!='none' && !detecting){detecting=true;
-  try{lastFaces=await ENGINE.detect(kv,0.5);}catch(e){}
+  try{drawFaces(await ENGINE.detect(kv,0.5));}catch(e){}
   detecting=false;}
- setTimeout(loop,300);   // menos inferencia = menos bloqueo del hilo; el lerp mantiene el overlay fluido
+ setTimeout(loop,300);
 }
-requestAnimationFrame(paint);
 let busy=false, actx=null;
 function beep(ok){try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state=='suspended')actx.resume();
  let t=actx.currentTime;(ok?[880,1320]:[440,330]).forEach((f,i)=>{let o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=f;o.connect(g);g.connect(actx.destination);
