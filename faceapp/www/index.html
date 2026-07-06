@@ -58,6 +58,14 @@ video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset
   <label style=margin-top:12px><small>Anti-duplicado · <b id=dv>5</b> min</small><input id=dw type=range min=0 max=30 step=1></label>
   <div class=row style=margin-top:14px;gap:9px><input id=lv type=checkbox> <small style=color:var(--txt)>Anti-foto (liveness) activado</small></div>
   <label style=margin-top:12px><small>Exigencia anti-foto · <b id=ltv>0.5</b></small><input id=lt type=range min=0.3 max=0.8 step=0.05></label>
+  <div class=row style=margin-top:14px;gap:9px><input id=vz type=checkbox> <small style=color:var(--txt)>🔊 Voz al marcar</small></div>
+  <label style=margin-top:12px><small>Hora de entrada (marca tarde después) · deja vacío para no usar</small><input id=he type=time></label>
+  <label style=margin-top:12px><small>Tolerancia de tardanza (min)</small><input id=tl type=number min=0 max=120 placeholder=10></label>
+  <label style=margin-top:12px><small>🔔 Telegram — token del bot (opcional)</small><input id=tgt placeholder="123456:ABC..."></label>
+  <label style=margin-top:12px><small>Telegram — chat ID</small><input id=tgc placeholder="ID del chat/grupo"></label>
+  <label style=margin-top:12px><small>🚪 URL para abrir puerta/relé (opcional)</small><input id=ac placeholder="http://192.168.1.60/open"></label>
+  <label style=margin-top:12px><small>🔄 Servidor central multi-kiosko (opcional)</small><input id=ce placeholder="http://192.168.1.50:8090"></label>
+  <div class=row style=margin-top:8px><button class=sec onclick=syncPull()>Sincronizar personas</button></div>
   <button style=margin-top:14px onclick=savecfg()>Guardar</button> <span id=cm></span></div>
  <div class=card><h2>Calibrar anti-foto</h2><p><small>Actívalo solo si tu cara real da <b>alto</b> y una foto/pantalla da <b>bajo</b>. Ajusta el umbral arriba con estos valores.</small></p>
   <button class=sec onclick=calibTgl() id=calibbtn>Probar en vivo</button>
@@ -65,7 +73,9 @@ video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset
  <div class=card><h2>Backup (respaldo)</h2><p><small>Exporta para guardar/mover; importa pegando el texto.</small></p>
   <div class=row><button class=sec onclick=exportData()>Exportar</button><button class=sec onclick=importData()>Importar</button></div>
   <textarea id=bk placeholder="datos de respaldo (JSON)" style="width:100%;height:74px;margin-top:8px;font-size:11px;font-family:monospace;border-radius:11px;border:1px solid var(--line);background:#0b101c;color:#fff;padding:10px"></textarea></div>
- <div class=card><h2>Reporte del día</h2><table id=rp></table></div>
+ <div class=card><div class=row style=justify-content:space-between><h2 style=margin:0>Reporte</h2>
+  <select id=rgsel onchange=renderReport() style=width:auto;padding:8px 10px><option value=0>Hoy</option><option value=7>Últimos 7 días</option><option value=30>Últimos 30 días</option></select></div>
+  <table id=rp></table></div>
  <div class=card><h2>Marcas recientes</h2><table id=lg></table></div>
 </div>
 
@@ -78,7 +88,7 @@ const $=id=>document.getElementById(id);
 function p2(n){return String(n).padStart(2,'0')}
 function nowStr(){let d=new Date();return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())}
 const DB={
- cfg(){return Object.assign({threshold:0.35,liveness:false,live_threshold:0.5,dup_window:300,business:''},JSON.parse(localStorage.getItem('cfg')||'{}'))},
+ cfg(){return Object.assign({threshold:0.35,liveness:false,live_threshold:0.5,dup_window:300,business:'',entrada:'',tolerancia:10,tg_token:'',tg_chat:'',voz:true,evidencia:true,acceso_url:'',central_url:''},JSON.parse(localStorage.getItem('cfg')||'{}'))},
  setCfg(c){localStorage.setItem('cfg',JSON.stringify(c))},
  people(){return JSON.parse(localStorage.getItem('people')||'[]')},
  setPeople(p){localStorage.setItem('people',JSON.stringify(p))},
@@ -87,7 +97,7 @@ const DB={
  log(){return JSON.parse(localStorage.getItem('log')||'[]')},
  setLog(l){localStorage.setItem('log',JSON.stringify(l))},
  today(name){let d=nowStr().slice(0,10);return this.log().filter(r=>r[1]==name&&r[0].startsWith(d)).map(r=>r[0]).sort()},
- mark(name,tipo){let l=this.log();l.push([nowStr(),name,tipo]);this.setLog(l)}
+ mark(name,tipo,tarde,ts){let l=this.log();l.push([ts||nowStr(),name,tipo,tarde?'tarde':'']);this.setLog(l)}
 };
 function identify(emb){let p=DB.people();if(!p.length)return{name:'desconocido',sim:0};
  let best={name:'',sim:-2};for(const x of p){let s=ENGINE.cosine(emb,Float32Array.from(x.emb));if(s>best.sim)best={name:x.name,sim:s};}
@@ -149,19 +159,34 @@ async function loop(){                             // detección (más lenta) ac
 }
 requestAnimationFrame(paint);
 let busy=false;
+function say(t){let c=DB.cfg();if(!c.voz)return;try{let u=new SpeechSynthesisUtterance(t);u.lang='es-ES';speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+function esTarde(){let c=DB.cfg();if(!c.entrada)return false;let p=c.entrada.split(':');let lim=new Date();lim.setHours(+p[0],(+p[1]||0)+(+c.tolerancia||0),0,0);return new Date()>lim;}
+function tg(msg,blob){let c=DB.cfg();if(!c.tg_token||!c.tg_chat)return;
+ try{ if(blob){let f=new FormData();f.append('chat_id',c.tg_chat);f.append('caption',msg);f.append('photo',blob,'e.jpg');fetch('https://api.telegram.org/bot'+c.tg_token+'/sendPhoto',{method:'POST',body:f});}
+  else fetch('https://api.telegram.org/bot'+c.tg_token+'/sendMessage',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:c.tg_chat,text:msg})}); }catch(e){}}
+function saveEvidence(ts,blob){let im=new Image();im.onload=()=>{let sc=160/Math.max(im.width,im.height),cn=document.createElement('canvas');
+ cn.width=im.width*sc;cn.height=im.height*sc;cn.getContext('2d').drawImage(im,0,0,cn.width,cn.height);
+ let e=JSON.parse(localStorage.getItem('evi')||'{}');e[ts]=cn.toDataURL('image/jpeg',0.6);
+ let ks=Object.keys(e).sort();while(ks.length>40)delete e[ks.shift()];localStorage.setItem('evi',JSON.stringify(e));URL.revokeObjectURL(im.src);};im.src=URL.createObjectURL(blob);}
 async function mark(){if(busy)return;busy=true;res.textContent='…';res.className='';
  try{let r=await ENGINE.embedFace(kv,0.5);
   if(!r){res.textContent='Sin rostro';res.className='no';return;}
   let cfg=DB.cfg(), live=await ENGINE.antiSpoof(kv,r.box);
-  if(cfg.liveness&&live!=null&&live<cfg.live_threshold){res.textContent='Cara real, no foto';res.className='no';return;}
+  if(cfg.liveness&&live!=null&&live<cfg.live_threshold){res.textContent='Cara real, no foto';res.className='no';say('Usa tu cara real');return;}
   let id=identify(r.emb);
-  if(id.name=='desconocido'){res.textContent='No reconocido';res.className='no';return;}
+  if(id.name=='desconocido'){res.textContent='No reconocido';res.className='no';say('No reconocido');return;}
   let tm=DB.today(id.name), now=new Date();
   if(tm.length){let last=new Date(tm[tm.length-1]); if((now-last)/1000<cfg.dup_window){res.textContent=id.name+' ya marcó '+tm[tm.length-1].slice(11,16);res.className='';return;}}
-  let tipo=tm.length==0?'entrada':'salida', h='';
+  let tipo=tm.length==0?'entrada':'salida', h='', tarde=(tipo=='entrada'&&esTarde()), ts=nowStr();
   if(tipo=='salida'){let hr=Math.round((now-new Date(tm[0]))/360000)/10;h=' ('+hr+'h)';}
-  DB.mark(id.name,tipo);
-  res.textContent='✓ '+id.name+' · '+tipo.toUpperCase()+' '+nowStr().slice(11,16)+h;res.className='ok';
+  DB.mark(id.name,tipo,tarde,ts);
+  let et=tarde?' · TARDE':'';
+  res.innerHTML='<svg class="ic lg" viewBox="0 0 24 24" fill=none stroke=currentColor stroke-width=2 stroke-linecap=round stroke-linejoin=round style=vertical-align:-5px><path d="M20 6 9 17l-5-5"/></svg> '+id.name+' · '+tipo.toUpperCase()+et+' '+ts.slice(11,16)+h;res.className=tarde?'':'ok';
+  say((tipo=='entrada'?'Bienvenido ':'Hasta luego ')+id.name+(tarde?', llegaste tarde':''));
+  let cv=document.getElementById('c');cv.width=kv.videoWidth;cv.height=kv.videoHeight;cv.getContext('2d').drawImage(kv,0,0);
+  cv.toBlob(b=>{ if(b){ tg(id.name+' · '+tipo+et+' · '+ts.slice(11,16), b); if(cfg.evidencia)saveEvidence(ts,b);} },'image/jpeg',0.7);
+  if(cfg.acceso_url) fetch(cfg.acceso_url).catch(()=>{});                                  // abrir puerta (relé/ESP32)
+  if(cfg.central_url) fetch(cfg.central_url.replace(/\/+$/,'')+'/sync/mark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ts:ts,name:id.name,tipo:tipo,tarde:tarde?'tarde':''})}).catch(()=>{});
  }catch(e){res.textContent='Error';res.className='no';}
  finally{setTimeout(()=>{res.textContent='Enfoca tu cara…';res.className='';},3500);busy=false;}
 }
@@ -171,20 +196,42 @@ async function enroll(){let n=nm.value.trim();if(!n){em.textContent='falta el no
   let p=DB.people(),best={name:'',sim:-2};
   for(const x of p){let s=ENGINE.cosine(r.emb,Float32Array.from(x.emb));if(s>best.sim)best={name:x.name,sim:s};}
   if(best.sim>=0.5){em.textContent='Esta cara ya está registrada como "'+best.name+'" ('+best.sim.toFixed(2)+')';return;}
-  DB.enroll(n,r.emb);em.textContent='enrolado ✓';nm.value='';loadAdmin();
+  DB.enroll(n,r.emb);
+  let c=DB.cfg(); if(c.central_url) fetch(c.central_url.replace(/\/+$/,'')+'/sync/enroll',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:n,emb:Array.from(r.emb)})}).catch(()=>{});
+  em.textContent='enrolado ✓';nm.value='';loadAdmin();
  }catch(e){em.textContent='error: '+e;}}
+async function syncPull(){let c=DB.cfg();if(!c.central_url)return;   // baja personas de otros kioscos
+ try{let pe=await(await fetch(c.central_url.replace(/\/+$/,'')+'/sync/people')).json();
+  let local=DB.people(),names=new Set(local.map(x=>x.name)),changed=false;
+  for(const x of (pe.people||[])){if(!names.has(x.name)){local.push({name:x.name,emb:x.emb});changed=true;}}
+  if(changed){DB.setPeople(local);loadAdmin();}
+ }catch(e){}}
 function delP(n){if(confirm('¿Eliminar a '+n+'?')){DB.del(n);loadAdmin();}}
-function report(){let d=nowStr().slice(0,10),by={};for(let r of DB.log())if(r[0].startsWith(d)){(by[r[1]]=by[r[1]]||[]).push(r[0]);}
- return Object.entries(by).map(([n,ts])=>{ts.sort();let h=ts.length>1?Math.round((new Date(ts[ts.length-1])-new Date(ts[0]))/360000)/10:0;
-  return{name:n,ent:ts[0].slice(11,16),sal:ts.length>1?ts[ts.length-1].slice(11,16):'—',horas:h,marcas:ts.length};}).sort((a,b)=>a.ent<b.ent?-1:1);}
+function report(){let d=nowStr().slice(0,10),by={};for(let r of DB.log())if(r[0].startsWith(d)){(by[r[1]]=by[r[1]]||[]).push(r);}
+ return Object.entries(by).map(([n,rows])=>{rows.sort((a,b)=>a[0]<b[0]?-1:1);let ts=rows.map(r=>r[0]);let h=ts.length>1?Math.round((new Date(ts[ts.length-1])-new Date(ts[0]))/360000)/10:0;
+  let tarde=rows.some(r=>r[2]=='entrada'&&r[3]=='tarde');
+  return{name:n,ent:ts[0].slice(11,16),sal:ts.length>1?ts[ts.length-1].slice(11,16):'—',horas:h,marcas:ts.length,tarde:tarde};}).sort((a,b)=>a.ent<b.ent?-1:1);}
+function renderReport(){let dias=+(typeof rgsel!=='undefined'&&rgsel?rgsel.value:0),hoy=nowStr().slice(0,10),by={};
+ for(let r of DB.log()){ if(dias==0){if(!r[0].startsWith(hoy))continue;} else if(Math.floor((new Date()-new Date(r[0]))/86400000)>dias)continue; (by[r[1]]=by[r[1]]||[]).push(r); }
+ let ent=Object.entries(by);
+ if(dias==0){
+  let rep=ent.map(([n,rs])=>{rs.sort((a,b)=>a[0]<b[0]?-1:1);let ts=rs.map(r=>r[0]);let h=ts.length>1?Math.round((new Date(ts[ts.length-1])-new Date(ts[0]))/360000)/10:0;let t=rs.some(r=>r[2]=='entrada'&&r[3]=='tarde');return{name:n,a:ts[0].slice(11,16),b:ts.length>1?ts[ts.length-1].slice(11,16):'—',h:h,t:t};}).sort((x,y)=>x.a<y.a?-1:1);
+  rp.innerHTML='<tr><th>Persona</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr>'+rep.map(r=>'<tr><td>'+r.name+'</td><td>'+r.a+(r.t?' <span style=color:var(--no)>tarde</span>':'')+'</td><td>'+r.b+'</td><td>'+(r.h||'—')+'</td></tr>').join('')||'<tr><td colspan=4><small>sin marcas</small></td></tr>';
+ } else {
+  let rep=ent.map(([n,rs])=>{let bd={};rs.forEach(r=>{(bd[r[0].slice(0,10)]=bd[r[0].slice(0,10)]||[]).push(r);});let h=0,td=0;for(let d in bd){let ts=bd[d].map(r=>r[0]).sort();if(ts.length>1)h+=(new Date(ts[ts.length-1])-new Date(ts[0]))/3600000;if(bd[d].some(r=>r[2]=='entrada'&&r[3]=='tarde'))td++;}return{name:n,d:Object.keys(bd).length,h:Math.round(h*10)/10,td:td};}).sort((x,y)=>y.d-x.d);
+  rp.innerHTML='<tr><th>Persona</th><th>Días</th><th>Horas</th><th>Tardes</th></tr>'+rep.map(r=>'<tr><td>'+r.name+'</td><td>'+r.d+'</td><td>'+r.h+'</td><td>'+(r.td||'—')+'</td></tr>').join('')||'<tr><td colspan=4><small>sin marcas</small></td></tr>';
+ }}
 function loadAdmin(){let c=DB.cfg();bz.value=c.business;th.value=c.threshold;tv.textContent=c.threshold;dw.value=Math.round(c.dup_window/60);dv.textContent=Math.round(c.dup_window/60);lv.checked=c.liveness;lt.value=c.live_threshold;ltv.textContent=c.live_threshold;
+ vz.checked=c.voz;he.value=c.entrada||'';tl.value=c.tolerancia;tgt.value=c.tg_token||'';tgc.value=c.tg_chat||'';ac.value=c.acceso_url||'';ce.value=c.central_url||'';
  let ppl=DB.people();pc.textContent=ppl.length;kp.textContent=ppl.length;
  pl.innerHTML=ppl.map(x=>'<div class=per><div class=av>'+x.name[0].toUpperCase()+'</div><span style=flex:1>'+x.name+'</span><button class=sec style=padding:9px11px onclick="delP(\''+x.name.replace(/'/g,"\\'")+'\')">✕</button></div>').join('')||'<small>vacío</small>';
  let rep=report();km.textContent=rep.reduce((a,b)=>a+b.marcas,0);kh.textContent=rep.length;
- rp.innerHTML='<tr><th>Persona</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr>'+rep.map(r=>'<tr><td>'+r.name+'</td><td>'+r.ent+'</td><td>'+r.sal+'</td><td>'+(r.horas||'—')+'</td></tr>').join('')||'<tr><td colspan=4><small>sin marcas hoy</small></td></tr>';
- let lg2=DB.log().slice(-30).reverse();lg.innerHTML='<tr><th>Hora</th><th>Nombre</th><th>Tipo</th></tr>'+lg2.map(r=>'<tr><td>'+r[0].slice(5,16)+'</td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>').join('')||'<tr><td colspan=3><small>sin marcas</small></td></tr>';}
+ renderReport();
+ let evi=JSON.parse(localStorage.getItem('evi')||'{}'),lg2=DB.log().slice(-30).reverse();
+ lg.innerHTML='<tr><th>Hora</th><th>Nombre</th><th>Tipo</th><th>Foto</th></tr>'+lg2.map(r=>'<tr><td>'+r[0].slice(5,16)+'</td><td>'+r[1]+'</td><td>'+r[2]+(r[3]=='tarde'?' <span style=color:var(--no)>· tarde</span>':'')+'</td><td>'+(evi[r[0]]?'<img src="'+evi[r[0]]+'" style="width:34px;height:34px;border-radius:6px;object-fit:cover" onclick="verFoto(this.src)">':'—')+'</td></tr>').join('')||'<tr><td colspan=4><small>sin marcas</small></td></tr>';}
+function verFoto(s){let d=document.createElement('div');d.style.cssText='position:fixed;inset:0;background:#000d;display:flex;align-items:center;justify-content:center;z-index:99;padding:20px';d.onclick=()=>d.remove();let i=new Image();i.src=s;i.style.cssText='max-width:100%;max-height:100%;border-radius:14px';d.appendChild(i);document.body.appendChild(d);}
 th.oninput=()=>tv.textContent=th.value;dw.oninput=()=>dv.textContent=dw.value;lt.oninput=()=>ltv.textContent=lt.value;
-function savecfg(){DB.setCfg({business:bz.value.trim(),threshold:+th.value,dup_window:+dw.value*60,liveness:lv.checked,live_threshold:+lt.value});
+function savecfg(){DB.setCfg(Object.assign(DB.cfg(),{business:bz.value.trim(),threshold:+th.value,dup_window:+dw.value*60,liveness:lv.checked,live_threshold:+lt.value,voz:vz.checked,entrada:he.value,tolerancia:+tl.value||0,tg_token:tgt.value.trim(),tg_chat:tgc.value.trim(),acceso_url:ac.value.trim(),central_url:ce.value.trim()}));
  cm.textContent='guardado ✓';$('biz').textContent=bz.value.trim()||'Asistencia';}
 function exportData(){bk.value=JSON.stringify({v:1,people:DB.people(),log:DB.log(),cfg:DB.cfg()});try{navigator.clipboard.writeText(bk.value);}catch(e){}}
 function importData(){try{let d=JSON.parse(bk.value);if(d.people)DB.setPeople(d.people);if(d.log)DB.setLog(d.log);if(d.cfg)DB.setCfg(d.cfg);loadAdmin();alert('Importado: '+(d.people?d.people.length:0)+' personas');}catch(e){alert('JSON inválido');}}

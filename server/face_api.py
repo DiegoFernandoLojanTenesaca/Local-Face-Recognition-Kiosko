@@ -107,6 +107,30 @@ def esp_mark():
     with open(ATT,"a",newline="") as f: csv.writer(f).writerow([ts,n,round(s,3),tipo])
     return jsonify(name=n,marked=True,tipo=tipo,time=ts[11:16])
 
+# ---------- Multi-kiosko: servidor central (varios kioscos comparten personas y registro) ----------
+CENTRAL_P=os.path.expanduser("~/central_people.json")
+CENTRAL_L=os.path.expanduser("~/central_log.json")
+def _load_json(p,d):
+    try: return json.load(open(p))
+    except: return d
+@app.post("/sync/enroll")
+def sync_enroll():
+    d=request.get_json(force=True,silent=True) or {}
+    if not d.get("name") or not d.get("emb"): return jsonify(error="faltan datos"),400
+    ppl=_load_json(CENTRAL_P,[])
+    if not any(x["name"]==d["name"] for x in ppl):
+        ppl.append({"name":d["name"],"emb":d["emb"]}); json.dump(ppl,open(CENTRAL_P,"w"))
+    return jsonify(ok=True,count=len(ppl))
+@app.get("/sync/people")
+def sync_people(): return jsonify(people=_load_json(CENTRAL_P,[]))
+@app.post("/sync/mark")
+def sync_mark():
+    d=request.get_json(force=True,silent=True) or {}
+    log=_load_json(CENTRAL_L,[]); log.append([d.get("ts"),d.get("name"),d.get("tipo"),d.get("tarde","")])
+    json.dump(log,open(CENTRAL_L,"w")); return jsonify(ok=True,count=len(log))
+@app.get("/sync/log")
+def sync_log(): return jsonify(rows=_load_json(CENTRAL_L,[])[::-1])
+
 @app.post("/detect")
 def detect_ep():
     p=_upload()
