@@ -121,6 +121,7 @@ video{width:100%;background:#000;display:block}canvas.ov{position:absolute;inset
 
 <script src="engine.js"></script>
 <script src="ort/ort.min.js"></script>
+<script src="secrets.js" onerror="window.__SECRETS={}"></script>
 <script>
 function tell(o){fetch('/poc',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)})}
 window.onerror=(m,s,l)=>tell({app:'standalone',err:''+m+' @'+l});
@@ -128,7 +129,7 @@ const $=id=>document.getElementById(id);
 function p2(n){return String(n).padStart(2,'0')}
 function nowStr(){let d=new Date();return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds())}
 const DB={
- cfg(){return Object.assign({threshold:0.35,liveness:false,live_threshold:0.5,dup_window:300,business:'',entrada:'',tolerancia:10,tg_token:'',tg_chat:'',voz:true,evidencia:true,acceso_url:'',central_url:''},JSON.parse(localStorage.getItem('cfg')||'{}'))},
+ cfg(){let c=Object.assign({threshold:0.35,liveness:false,live_threshold:0.5,dup_window:300,business:'',entrada:'',tolerancia:10,tg_token:'',tg_chat:'',voz:true,evidencia:true,acceso_url:'',central_url:''},JSON.parse(localStorage.getItem('cfg')||'{}'));let s=window.__SECRETS||{};if(!c.tg_token&&s.tg_token)c.tg_token=s.tg_token;if(!c.tg_chat&&s.tg_chat)c.tg_chat=s.tg_chat;return c},
  setCfg(c){localStorage.setItem('cfg',JSON.stringify(c))},
  people(){return JSON.parse(localStorage.getItem('people')||'[]')},
  setPeople(p){localStorage.setItem('people',JSON.stringify(p))},

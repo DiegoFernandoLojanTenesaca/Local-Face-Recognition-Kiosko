@@ -23,6 +23,7 @@ __pycache__/
 *.pyc
 
 # --- Datos de runtime / local ---
+faceapp/www/secrets.js
 .claude/
 *.csv
 face_db.npz
